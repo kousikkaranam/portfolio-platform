@@ -7,7 +7,7 @@ export default function HeroSection({ data }: { data: PortfolioData }) {
   const social = settings.socialLinks;
 
   return (
-    <section className="min-h-screen flex items-center justify-center px-6 py-20 relative overflow-hidden">
+    <section className="min-h-screen flex items-center justify-center px-6 pt-32 pb-20 relative overflow-hidden">
       {/* Subtle gradient bg */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0b0f19] via-[#0f1623] to-[#0b0f19]" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: settings.accentColor }} />

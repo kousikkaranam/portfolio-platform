@@ -36,6 +36,7 @@ export async function POST(request: Request) {
       endDate: body.endDate ? new Date(body.endDate) : null,
       isCurrent: body.isCurrent ?? false,
       techStack: body.techStack ?? [],
+      githubUrl: body.githubUrl || null,
       displayOrder: body.displayOrder ?? 0,
     },
   });
@@ -62,6 +63,7 @@ export async function PUT(request: Request) {
       endDate: body.endDate ? new Date(body.endDate) : null,
       isCurrent: body.isCurrent ?? false,
       techStack: body.techStack ?? [],
+      githubUrl: body.githubUrl || null,
       displayOrder: body.displayOrder ?? 0,
     },
   });

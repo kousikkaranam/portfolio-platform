@@ -140,6 +140,7 @@ model Experience {
   endDate        DateTime? @db.Date
   isCurrent      Boolean  @default(false)
   techStack      String[] // PostgreSQL array
+  githubUrl      String?  @db.Text
   displayOrder   Int      @default(0)
 
   createdAt DateTime @default(now())

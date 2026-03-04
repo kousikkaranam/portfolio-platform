@@ -44,6 +44,7 @@ export interface PortfolioData {
     endDate: string | null;
     isCurrent: boolean;
     techStack: string[];
+    githubUrl: string | null;
     displayOrder: number;
   }>;
   projects: Array<{

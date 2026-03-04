@@ -74,6 +74,7 @@ export async function fetchPortfolioData(slug: string): Promise<PortfolioData | 
       endDate: ex.endDate?.toISOString() || null,
       isCurrent: ex.isCurrent,
       techStack: ex.techStack,
+      githubUrl: ex.githubUrl || null,
       displayOrder: ex.displayOrder,
     })),
     projects: user.projects.map((p) => ({

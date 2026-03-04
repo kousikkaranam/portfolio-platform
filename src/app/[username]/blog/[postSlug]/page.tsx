@@ -5,13 +5,13 @@ import ReactMarkdown from "react-markdown";
 import { ArrowLeft, Clock, Calendar } from "lucide-react";
 
 interface Props {
-  params: Promise<{ slug: string; postSlug: string }>;
+  params: Promise<{ username: string; postSlug: string }>;
 }
 
 export default async function BlogPostPage({ params }: Props) {
-  const { slug, postSlug } = await params;
+  const { username, postSlug } = await params;
 
-  const user = await prisma.user.findUnique({ where: { slug } });
+  const user = await prisma.user.findUnique({ where: { slug: username } });
   if (!user) notFound();
 
   const post = await prisma.blogPost.findFirst({
@@ -35,7 +35,7 @@ export default async function BlogPostPage({ params }: Props) {
       <div className="max-w-3xl mx-auto px-6 py-16">
         {/* Back link */}
         <Link
-          href={`/${slug}`}
+          href={`/${username}`}
           className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-10"
         >
           <ArrowLeft size={16} />

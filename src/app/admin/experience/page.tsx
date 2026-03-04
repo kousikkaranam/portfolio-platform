@@ -13,6 +13,7 @@ interface Experience {
   endDate: string | null;
   isCurrent: boolean;
   techStack: string[];
+  githubUrl: string | null;
   displayOrder: number;
 }
 
@@ -26,6 +27,7 @@ const emptyForm = {
   isCurrent: false,
   techStackInput: "",
   techStack: [] as string[],
+  githubUrl: "",
 };
 
 export default function ExperiencePage() {
@@ -61,6 +63,7 @@ export default function ExperiencePage() {
       isCurrent: exp.isCurrent,
       techStackInput: "",
       techStack: exp.techStack ?? [],
+      githubUrl: exp.githubUrl ?? "",
     });
     setShowModal(true);
   };
@@ -88,6 +91,7 @@ export default function ExperiencePage() {
       endDate: form.isCurrent ? null : form.endDate || null,
       isCurrent: form.isCurrent,
       techStack: form.techStack,
+      githubUrl: form.githubUrl || null,
     };
 
     await fetch("/api/admin/experience", {
@@ -294,6 +298,17 @@ export default function ExperiencePage() {
                     ))}
                   </div>
                 )}
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1.5">Work GitHub URL <span className="text-gray-600">(optional)</span></label>
+                <input
+                  type="url"
+                  value={form.githubUrl}
+                  onChange={(e) => setForm((f) => ({ ...f, githubUrl: e.target.value }))}
+                  placeholder="https://github.com/your-org"
+                  className="w-full bg-[#0b0f19] border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#5eead4] placeholder:text-gray-600"
+                />
+                <p className="text-xs text-gray-600 mt-1">Shown in the GitHub section as your work contribution chart</p>
               </div>
             </div>
 
