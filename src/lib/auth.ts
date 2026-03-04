@@ -13,7 +13,7 @@ export const authOptions: NextAuthOptions = {
         return {
           id: profile.id.toString(),
           name: profile.name || profile.login,
-          email: profile.email,
+          email: profile.email ?? `${profile.login}@github.noreply`,
           image: profile.avatar_url,
           slug: profile.login.toLowerCase(),
           githubUsername: profile.login,

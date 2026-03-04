@@ -16,10 +16,14 @@ import {
   Layers,
   LogOut,
   ExternalLink,
+  Sparkles,
+  LayoutTemplate,
 } from "lucide-react";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/import", label: "Import Resume", icon: Sparkles },
+  { href: "/admin/templates", label: "Templates", icon: LayoutTemplate },
   { href: "/admin/settings", label: "Settings", icon: Settings },
   { href: "/admin/skills", label: "Skills", icon: Code2 },
   { href: "/admin/experience", label: "Experience", icon: Briefcase },

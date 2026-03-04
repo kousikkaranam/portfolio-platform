@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { fetchPortfolioData } from "@/lib/portfolio";
 import DefaultTemplate from "@/templates/default/DefaultTemplate";
+import { prisma } from "@/lib/prisma";
+import { renderTemplate } from "@/lib/template-renderer";
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -34,9 +36,23 @@ export default async function PortfolioPage({ params }: Props) {
   const data = await fetchPortfolioData(username);
   if (!data) notFound();
 
-  // Future: check for active custom template and render it instead
-  // const customTemplate = await prisma.customTemplate.findFirst({ where: { userId, isActive: true } });
-  // if (customTemplate) return <CustomRenderer html={customTemplate.html} data={data} />;
+  // Check for active custom template
+  const user = await prisma.user.findUnique({ where: { slug: username }, select: { id: true } });
+  if (user) {
+    const customTemplate = await prisma.customTemplate.findFirst({
+      where: { userId: user.id, isActive: true },
+    });
+    if (customTemplate) {
+      const rendered = renderTemplate(customTemplate.html, data);
+      return (
+        <div
+          id="custom-template"
+          style={{ minHeight: "100vh" }}
+          dangerouslySetInnerHTML={{ __html: rendered }}
+        />
+      );
+    }
+  }
 
   return <DefaultTemplate data={data} />;
 }
