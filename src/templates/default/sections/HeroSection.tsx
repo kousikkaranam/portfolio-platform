@@ -4,6 +4,19 @@ import type { PortfolioData } from "@/templates/types";
 import Image from "next/image";
 
 const SIZE_PX = { sm: 80, md: 120, lg: 160 } as const;
+
+/** Convert Google Drive share/view URLs to direct-download URLs. Passes all other URLs through. */
+function toDownloadUrl(url: string): string {
+  // https://drive.google.com/file/d/FILE_ID/view?...  →  direct download
+  const fileMatch = url.match(/drive\.google\.com\/file\/d\/([^/?#]+)/);
+  if (fileMatch) return `https://drive.google.com/uc?export=download&id=${fileMatch[1]}`;
+
+  // https://drive.google.com/open?id=FILE_ID
+  const openMatch = url.match(/drive\.google\.com\/open\?id=([^&]+)/);
+  if (openMatch) return `https://drive.google.com/uc?export=download&id=${openMatch[1]}`;
+
+  return url;
+}
 const SHAPE_CLASS = { circle: "rounded-full", rounded: "rounded-2xl", square: "rounded-md" } as const;
 
 export default function HeroSection({ data }: { data: PortfolioData }) {
@@ -78,11 +91,18 @@ export default function HeroSection({ data }: { data: PortfolioData }) {
           {social?.email && <SocialLink href={`mailto:${social.email}`} label="Email" accentRaw={accentRaw}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></SocialLink>}
 
           {settings.resumeUrl && (
-            <a href={settings.resumeUrl} target="_blank" rel="noopener noreferrer"
-              className="px-5 py-2.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-90"
-              style={{ background: "var(--accent)", color: "var(--accent-fg)" }}>
-              Download Resume
-            </a>
+            <>
+              <a href={toDownloadUrl(settings.resumeUrl)} target="_blank" rel="noopener noreferrer" download
+                className="px-5 py-2.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-90"
+                style={{ background: "var(--accent)", color: "var(--accent-fg)" }}>
+                Download Resume
+              </a>
+              <a href={settings.resumeUrl} target="_blank" rel="noopener noreferrer"
+                className="px-5 py-2.5 rounded-lg text-sm font-medium border transition-opacity hover:opacity-90"
+                style={{ borderColor: `${accentRaw}60`, color: accentRaw }}>
+                View Resume
+              </a>
+            </>
           )}
         </div>
       </div>

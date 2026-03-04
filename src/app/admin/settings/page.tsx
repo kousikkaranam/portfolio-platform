@@ -557,6 +557,27 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* Resume */}
+        <section className="bg-[#121826] border border-gray-800 rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-white mb-1">Resume</h2>
+          <p className="text-xs text-gray-500 mb-4">
+            Paste a public link to your resume (e.g. Google Drive, Dropbox). A &ldquo;Download Resume&rdquo; button will appear on your portfolio.
+          </p>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1.5">Resume URL</label>
+            <input
+              type="url"
+              value={settings.resumeUrl ?? ""}
+              onChange={(e) => setSettings((s) => ({ ...s, resumeUrl: e.target.value }))}
+              placeholder="https://drive.google.com/file/d/..."
+              className="w-full bg-[#0b0f19] border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#5eead4] transition-colors placeholder:text-gray-600"
+            />
+            <p className="text-xs text-gray-600 mt-1.5">
+              For Google Drive: open the file → Share → &ldquo;Anyone with the link&rdquo; → Copy link.
+            </p>
+          </div>
+        </section>
+
         {/* SEO */}
         <section className="bg-[#121826] border border-gray-800 rounded-xl p-6">
           <h2 className="text-lg font-semibold text-white mb-4">SEO</h2>

@@ -4,6 +4,14 @@ import { useState, useEffect } from "react";
 import type { PortfolioData } from "@/templates/types";
 import ThemeToggle from "./ThemeToggle";
 
+function toDownloadUrl(url: string): string {
+  const fileMatch = url.match(/drive\.google\.com\/file\/d\/([^/?#]+)/);
+  if (fileMatch) return `https://drive.google.com/uc?export=download&id=${fileMatch[1]}`;
+  const openMatch = url.match(/drive\.google\.com\/open\?id=([^&]+)/);
+  if (openMatch) return `https://drive.google.com/uc?export=download&id=${openMatch[1]}`;
+  return url;
+}
+
 const SECTION_LABELS: Record<string, string> = {
   skills: "Skills",
   experience: "Experience",
@@ -111,15 +119,35 @@ export default function Navbar({ data }: { data: PortfolioData }) {
           ))}
           <ThemeToggle accent={accent} />
           {data.settings.resumeUrl && (
-            <a
-              href={data.settings.resumeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="ml-2 px-4 py-1.5 rounded-lg text-sm font-medium transition-opacity hover:opacity-90"
-              style={{ background: accent, color: "var(--accent-fg)" }}
-            >
-              Resume
-            </a>
+            <div className="ml-2 flex items-center gap-1">
+              {/* View Resume */}
+              <a
+                href={data.settings.resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors hover:opacity-90"
+                style={{ borderColor: `${accent}60`, color: accent }}
+                title="Open in Drive"
+              >
+                Resume
+              </a>
+              {/* Direct download */}
+              <a
+                href={toDownloadUrl(data.settings.resumeUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="w-8 h-8 flex items-center justify-center rounded-lg border transition-colors hover:opacity-90"
+                style={{ borderColor: `${accent}60`, color: accent }}
+                title="Download Resume"
+              >
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </a>
+            </div>
           )}
         </div>
 
@@ -157,15 +185,27 @@ export default function Navbar({ data }: { data: PortfolioData }) {
             </button>
           ))}
           {data.settings.resumeUrl && (
-            <a
-              href={data.settings.resumeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 px-4 py-2.5 rounded-lg text-sm font-medium text-center transition-opacity hover:opacity-90"
-              style={{ background: accent, color: "var(--accent-fg)" }}
-            >
-              Resume
-            </a>
+            <div className="mt-2 flex gap-2">
+              <a
+                href={data.settings.resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-center border transition-opacity hover:opacity-90"
+                style={{ borderColor: `${accent}60`, color: accent }}
+              >
+                View Resume
+              </a>
+              <a
+                href={toDownloadUrl(data.settings.resumeUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-center transition-opacity hover:opacity-90"
+                style={{ background: accent, color: "var(--accent-fg)" }}
+              >
+                Download
+              </a>
+            </div>
           )}
         </div>
       )}

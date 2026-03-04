@@ -13,6 +13,7 @@ import CertificationsSection from "./sections/CertificationsSection";
 import GitHubSection from "./sections/GitHubSection";
 import ContactSection from "./sections/ContactSection";
 import CustomSectionRenderer from "./sections/CustomSectionRenderer";
+import ChatWidget from "./components/ChatWidget";
 
 const SECTION_COMPONENTS: Record<string, React.FC<{ data: PortfolioData }>> = {
   hero: HeroSection,
@@ -107,6 +108,12 @@ export default function DefaultTemplate({ data }: { data: PortfolioData }) {
           </div>
         );
       })}
+
+      <ChatWidget
+        username={data.user.slug}
+        name={data.user.name}
+        accentColor={darkAccent}
+      />
     </div>
   );
 }

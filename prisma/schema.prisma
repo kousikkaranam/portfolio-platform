@@ -36,6 +36,7 @@ model User {
   sectionVisibility     SectionVisibility?
   customTemplates       CustomTemplate[]
   customSections        CustomSection[]
+  resume                Resume?
 
   @@map("users")
 }
@@ -317,6 +318,24 @@ model CustomTemplate {
 
   @@index([userId])
   @@map("custom_templates")
+}
+
+// ─── Resume ──────────────────────────────────────────────
+
+model Resume {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  docContent      String? @db.Text  // Plain text / markdown version
+  latexContent    String? @db.Text  // LaTeX source
+  tailoredContent String? @db.Text  // Last AI-tailored output
+  tailoredForJob  String? @db.Text  // Job description it was tailored for
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("resumes")
 }
 
 // ─── Custom Sections ─────────────────────────────────────
