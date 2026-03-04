@@ -41,22 +41,10 @@ Conditional sections (only renders if data exists):
 
 IMPORTANT: Use style="color: {{accentColor}}" or style="background-color: {{accentColor}}" where accent color should appear. Never hard-code the color.`;
 
-async function callGroq(prompt: string): Promise<string> {
-  const Groq = (await import("groq-sdk")).default;
-  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  const completion = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
-    messages: [{ role: "user", content: `${SYSTEM_PROMPT}\n\nDesign description: ${prompt}` }],
-    temperature: 0.7,
-    max_tokens: 8192,
-  });
-  return completion.choices[0].message.content?.trim() ?? "";
-}
-
 async function callGemini(prompt: string): Promise<string> {
   const { GoogleGenerativeAI } = await import("@google/generative-ai");
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
   const result = await model.generateContent(`${SYSTEM_PROMPT}\n\nDesign description: ${prompt}`);
   return result.response.text().trim();
 }
@@ -72,12 +60,34 @@ async function callClaude(prompt: string): Promise<string> {
   return (msg.content[0] as { type: string; text: string }).text.trim();
 }
 
+async function callGroq(prompt: string): Promise<string> {
+  const Groq = (await import("groq-sdk")).default;
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  const completion = await groq.chat.completions.create({
+    model: "llama-3.3-70b-versatile",
+    messages: [{ role: "user", content: `${SYSTEM_PROMPT}\n\nDesign description: ${prompt}` }],
+    temperature: 0.7,
+    max_tokens: 8192,
+  });
+  return completion.choices[0].message.content?.trim() ?? "";
+}
+
 function clean(raw: string): string {
   return raw
     .replace(/^```html\s*/i, "")
     .replace(/^```\s*/i, "")
     .replace(/```\s*$/i, "")
     .trim();
+}
+
+async function generate(prompt: string): Promise<string> {
+  const provider = (process.env.AI_PROVIDER || "gemini").toLowerCase();
+  if (provider === "anthropic" || provider === "claude") return await callClaude(prompt);
+  if (provider === "gemini") return await callGemini(prompt);
+  // Default: Groq → Gemini → Claude
+  try { return await callGroq(prompt); } catch { /* fall through */ }
+  try { return await callGemini(prompt); } catch { /* fall through */ }
+  return await callClaude(prompt);
 }
 
 export async function POST(request: Request) {
@@ -88,26 +98,7 @@ export async function POST(request: Request) {
   if (!prompt?.trim()) return NextResponse.json({ error: "Prompt required" }, { status: 400 });
 
   try {
-    const provider = (process.env.AI_PROVIDER || "groq").toLowerCase();
-    let raw: string;
-    if (provider === "anthropic" || provider === "claude") {
-      raw = await callClaude(prompt);
-    } else if (provider === "gemini") {
-      raw = await callGemini(prompt);
-    } else {
-      // Default: Groq (free) → Gemini → Claude
-      try {
-        raw = await callGroq(prompt);
-      } catch (groqErr) {
-        console.warn("Groq failed, trying Gemini:", groqErr instanceof Error ? groqErr.message : groqErr);
-        try {
-          raw = await callGemini(prompt);
-        } catch {
-          raw = await callClaude(prompt);
-        }
-      }
-    }
-
+    const raw = await generate(prompt);
     const html = clean(raw);
 
     if (html.length < 200) {
