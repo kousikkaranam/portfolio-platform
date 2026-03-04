@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -11,11 +12,11 @@ cloudinary.config({
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const formData = await req.formData();
   const file = formData.get("file") as File;
-  const folder = (formData.get("folder") as string) || "portfolio";
+  const folder = (formData.get("folder") as string) || "general";
 
   if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
@@ -24,10 +25,10 @@ export async function POST(req: NextRequest) {
 
   const result = await new Promise<any>((resolve, reject) => {
     cloudinary.uploader
-      .upload_stream({ folder: `portfolio/${folder}`, resource_type: "auto" }, (err, res) => {
-        if (err) reject(err);
-        else resolve(res);
-      })
+      .upload_stream(
+        { folder: `portfolio/${folder}`, resource_type: "auto" },
+        (err, res) => (err ? reject(err) : resolve(res))
+      )
       .end(buffer);
   });
 
