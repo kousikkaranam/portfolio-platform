@@ -1,105 +1,143 @@
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4-38bdf8?logo=tailwindcss" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma" alt="Prisma" />
+  <img src="https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
+</p>
+
 # Portfolio Platform
 
-A dynamic, AI-powered portfolio generator where developers can build, customize, and publish stunning portfolio websites — completely free.
+An AI-powered portfolio generator for developers. Build, customize, and publish stunning portfolio websites — completely free.
 
-> **Live:** [kousik.is-a.dev](https://kousik.is-a.dev)  
-> **Status:** Active Development  
-> **License:** MIT
+> **Live Demo:** [kousikkaranam.is-a.dev](https://kousikkaranam.is-a.dev)
 
 ---
 
-## What is this?
+## Table of Contents
 
-Instead of hardcoding a portfolio every time you want to update it, this platform gives you a **full admin dashboard** to manage your content and an **AI-powered template engine** that generates portfolio designs on demand. Think of it as a free, open-source alternative to Carrd or Super.so — built specifically for developers.
+- [About](#about)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Database Schema](#database-schema)
+- [Architecture](#architecture)
+- [API Reference](#api-reference)
+- [Environment Variables](#environment-variables)
+- [Deployment](#deployment)
+- [Scripts](#scripts)
+- [Security](#security)
+- [Contributing](#contributing)
+- [License](#license)
+- [Third-Party Licenses](#third-party-licenses--acknowledgments)
 
-**For a single user:** Manage your entire portfolio from a dashboard. Change content, swap designs, publish instantly.
+---
 
-**For multiple users:** Anyone can sign in with GitHub, fill in their data (or upload a resume), pick a template, and get a live portfolio — all on the same deployment.
+## About
+
+Instead of hardcoding a portfolio every time you want to update it, this platform gives you a **full admin dashboard** to manage your content and an **AI-powered template engine** that generates portfolio designs on demand.
+
+- **Single-user mode:** Deploy your own instance. Manage your entire portfolio from the dashboard — change content, swap designs, publish instantly.
+- **Multi-user mode:** Host a platform where anyone can sign in with GitHub, upload a resume (or enter data manually), pick a template, and get a live portfolio at `/[username]`.
 
 ---
 
 ## Features
 
-### Built
-- [x] GitHub OAuth authentication (NextAuth)
-- [x] Admin dashboard with protected routes
-- [x] Portfolio settings (title, tagline, bio, social links, theme, accent color)
-- [x] Skills management with categories and proficiency levels
-- [x] Experience timeline with tech stack tags
-- [x] Projects with thumbnails, categories, live/GitHub URLs
-- [x] Engineering highlights (deep dives, system design case studies)
-- [x] Blog with Markdown content, tags, read-time estimation
-- [x] Education and certifications management
-- [x] Section visibility toggles and drag-to-reorder
-- [x] Cloudinary image uploads (drag & drop)
-- [x] Public portfolio rendering at /[username]
+### Core
+- **GitHub OAuth** — one-click sign in via NextAuth.js
+- **Admin Dashboard** — protected routes for managing all portfolio content
+- **Public Portfolios** — server-side rendered at `/[username]`
+- **Section Management** — toggle visibility and drag-to-reorder any section
+- **Dark/Light Theme** — theme toggle on portfolio pages
+- **Framer Motion Animations** — smooth scroll transitions
 
-### Planned
-- [ ] AI resume parser (upload PDF → instant portfolio)
-- [ ] LinkedIn PDF import
-- [ ] AI template engine (describe or import any design)
-- [ ] AI chatbot on every portfolio (answers visitor questions)
-- [ ] Static export + GitHub Pages publishing (free hosting per user)
-- [ ] Custom domain support
-- [ ] Template marketplace (users share AI-generated designs)
-- [ ] Light/dark theme toggle on portfolios
-- [ ] Framer Motion animations
-- [ ] Download resume button
-- [ ] Analytics dashboard
+### Content Management
+- **Portfolio Settings** — title, tagline, bio, hero image, social links, theme colors
+- **Skills** — categorized (Frontend, Backend, Database, etc.) with proficiency levels
+- **Experience** — work timeline with dates, descriptions, and tech stack tags
+- **Projects** — thumbnails, categories, live/GitHub URLs, featured flag
+- **Engineering Highlights** — deep dives and system design case studies
+- **Blog** — Markdown posts with tags, read-time estimation, publish status
+- **Education & Certifications** — degrees, issuers, credential URLs
+- **Custom Sections** — user-defined sections with flexible content
+- **Image Uploads** — Cloudinary drag-and-drop integration
+
+### AI-Powered
+- **Resume Parser** — upload a PDF, extract structured data via Groq / Claude / Gemini
+- **Resume Editor** — edit, store, and compile LaTeX resumes to PDF
+- **Resume Export** — download as DOCX
+- **Template Engine** — generate custom portfolio HTML/CSS from text prompts
+- **Template Gallery** — browse, preview, and manage AI-generated designs
+
+### Integrations
+- **GitHub** — display personal and work repositories
+- **Cloudinary** — image CDN with on-the-fly transformations
+- **texlive.net** — server-side LaTeX to PDF compilation
 
 ---
 
 ## Tech Stack
 
-| Layer          | Technology                       | Why                                    |
-|----------------|----------------------------------|----------------------------------------|
-| Framework      | Next.js 14 (App Router)          | SSR, API routes, file-based routing    |
-| Language       | TypeScript                       | Type safety across the stack           |
-| Styling        | Tailwind CSS                     | Rapid UI development                   |
-| ORM            | Prisma 6                         | Type-safe database access              |
-| Database       | Neon PostgreSQL (serverless)     | Free tier, serverless, branch-able     |
-| Auth           | NextAuth.js (GitHub OAuth)       | Free, session-based, GitHub login      |
-| Image Storage  | Cloudinary                       | Free 25GB bandwidth/month              |
-| Hosting        | Vercel                           | Free tier, edge functions, auto-deploy |
-| Domain         | is-a.dev (GitHub subdomain)      | Free developer subdomain               |
-| AI (planned)   | Claude API / Groq (Llama 3)     | Resume parsing, chatbot, template gen  |
+| Layer | Technology | Purpose |
+|---|---|---|
+| **Framework** | [Next.js 16](https://nextjs.org/) (App Router) | SSR, API routes, file-based routing |
+| **Language** | [TypeScript 5](https://www.typescriptlang.org/) | Type safety across the stack |
+| **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) | Utility-first CSS framework |
+| **ORM** | [Prisma 6](https://www.prisma.io/) | Type-safe database access |
+| **Database** | [Neon PostgreSQL](https://neon.tech/) | Serverless PostgreSQL |
+| **Auth** | [NextAuth.js](https://next-auth.js.org/) | GitHub OAuth, session management |
+| **Images** | [Cloudinary](https://cloudinary.com/) | Image CDN and transformations |
+| **AI** | [Groq](https://groq.com/) / [Claude](https://www.anthropic.com/) / [Gemini](https://ai.google.dev/) | Multi-provider AI (resume parsing, template generation) |
+| **PDF** | [unpdf](https://github.com/nicehash/unpdf) + [texlive.net](https://texlive.net/) | PDF extraction + LaTeX compilation |
+| **Documents** | [docx](https://github.com/dolanmiu/docx) | DOCX generation |
+| **Animations** | [Framer Motion](https://www.framer.com/motion/) | Scroll animations |
+| **Code Editor** | [Monaco Editor](https://microsoft.github.io/monaco-editor/) | In-browser LaTeX/template editing |
+| **Markdown** | [react-markdown](https://github.com/remarkjs/react-markdown) | Blog post rendering |
+| **Templating** | [Mustache](https://mustache.github.io/) | Portfolio template variable substitution |
 
-**Monthly cost: ₹0**
+**Monthly hosting cost: $0** — runs entirely on free tiers (Vercel + Neon + Cloudinary).
 
 ---
 
-## Database Schema
+## Getting Started
 
-10 tables powering the entire platform:
+### Prerequisites
 
+| Requirement | Notes |
+|---|---|
+| **Node.js** 18+ | Runtime |
+| **npm** / yarn / pnpm | Package manager |
+| [GitHub OAuth App](https://github.com/settings/developers) | Authentication |
+| [Neon](https://neon.tech/) account | PostgreSQL database (free tier) |
+| [Cloudinary](https://cloudinary.com/) account | Image hosting (free tier) |
+| AI API key | [Groq](https://console.groq.com/) (free, recommended), [Gemini](https://ai.google.dev/), or [Claude](https://console.anthropic.com/) |
+
+### Installation
+
+```bash
+# 1. Clone the repository
+git clone <repository-url>
+cd portfolio-platform
+
+# 2. Install dependencies
+npm install
+
+# 3. Set up environment variables
+cp .env.example .env
+# Fill in your credentials (see Environment Variables section)
+
+# 4. Push the database schema
+npx prisma db push
+npx prisma generate
+
+# 5. Start the development server
+npm run dev
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                        CORE                                  │
-│  ┌──────────┐  ┌──────────┐  ┌─────────────────────┐       │
-│  │  users   │  │ accounts │  │     sessions         │       │
-│  │          │──│ (OAuth)  │  │  (NextAuth managed)  │       │
-│  └────┬─────┘  └──────────┘  └─────────────────────┘       │
-│       │                                                      │
-│       │ one-to-one / one-to-many                             │
-│       ▼                                                      │
-│  ┌──────────────────┐  ┌────────────┐  ┌──────────────┐    │
-│  │portfolio_settings │  │   skills   │  │ experiences  │    │
-│  │(theme, bio, URLs) │  │(categorized│  │(timeline)    │    │
-│  └──────────────────┘  └────────────┘  └──────────────┘    │
-│                                                              │
-│  ┌──────────┐  ┌────────────────────┐  ┌──────────────┐    │
-│  │ projects │  │engineering_highlights│ │  blog_posts  │    │
-│  │(showcase)│  │(deep dives)         │  │(markdown)    │    │
-│  └──────────┘  └────────────────────┘  └──────────────┘    │
-│                                                              │
-│  ┌───────────┐  ┌────────────────┐  ┌──────────────────┐   │
-│  │ education │  │ certifications │  │section_visibility │   │
-│  └───────────┘  └────────────────┘  │(toggle + reorder) │   │
-│                                      └──────────────────┘   │
-└──────────────────────────────────────────────────────────────┘
-```
 
-Full schema: [`prisma/schema.prisma`](./prisma/schema.prisma)
+Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
@@ -108,358 +146,373 @@ Full schema: [`prisma/schema.prisma`](./prisma/schema.prisma)
 ```
 portfolio-platform/
 ├── prisma/
-│   └── schema.prisma              # Database schema (10 tables)
+│   └── schema.prisma                 # 14-table PostgreSQL schema
 │
 ├── src/
 │   ├── app/
-│   │   ├── layout.tsx             # Root layout
-│   │   ├── page.tsx               # Landing page
+│   │   ├── layout.tsx                # Root layout
+│   │   ├── page.tsx                  # Landing page
 │   │   │
 │   │   ├── api/
-│   │   │   ├── auth/[...nextauth]/route.ts   # NextAuth handler
-│   │   │   ├── upload/route.ts               # Cloudinary upload
-│   │   │   └── admin/
-│   │   │       ├── settings/route.ts         # Portfolio settings CRUD
-│   │   │       ├── skills/route.ts           # Skills CRUD
-│   │   │       ├── experience/route.ts       # Experience CRUD
-│   │   │       ├── projects/route.ts         # Projects CRUD
-│   │   │       ├── engineering/route.ts      # Engineering highlights CRUD
-│   │   │       ├── blog/route.ts             # Blog posts CRUD
-│   │   │       ├── education/route.ts        # Education CRUD
-│   │   │       ├── certifications/route.ts   # Certifications CRUD
-│   │   │       └── sections/route.ts         # Section visibility CRUD
+│   │   │   ├── auth/[...nextauth]/   # GitHub OAuth handler
+│   │   │   ├── upload/               # Cloudinary image upload
+│   │   │   ├── chat/[username]/      # AI chatbot per portfolio
+│   │   │   └── admin/                # All protected CRUD endpoints
+│   │   │       ├── settings/         # Portfolio settings
+│   │   │       ├── skills/           # Skills
+│   │   │       ├── experience/       # Work experience
+│   │   │       ├── projects/         # Projects
+│   │   │       ├── engineering/      # Engineering highlights
+│   │   │       ├── blog/             # Blog posts
+│   │   │       ├── education/        # Education
+│   │   │       ├── certifications/   # Certifications
+│   │   │       ├── custom-sections/  # Custom sections
+│   │   │       ├── sections/         # Section visibility & order
+│   │   │       ├── stats/            # Dashboard statistics
+│   │   │       ├── import/           # AI resume parser + save
+│   │   │       ├── resume/           # Resume CRUD, compile, tailor
+│   │   │       └── templates/        # Template CRUD, generate, gallery
 │   │   │
-│   │   ├── admin/                 # Protected admin dashboard
-│   │   │   ├── layout.tsx         # Admin layout with sidebar
-│   │   │   ├── page.tsx           # Dashboard home
-│   │   │   ├── settings/page.tsx
-│   │   │   ├── skills/page.tsx
-│   │   │   ├── experience/page.tsx
-│   │   │   ├── projects/page.tsx
-│   │   │   ├── engineering/page.tsx
-│   │   │   ├── blog/page.tsx
-│   │   │   ├── education/page.tsx
-│   │   │   ├── certifications/page.tsx
-│   │   │   └── sections/page.tsx
-│   │   │
-│   │   └── [username]/            # Public portfolio (dynamic route)
-│   │       └── page.tsx
+│   │   ├── admin/                    # Protected admin dashboard (18 pages)
+│   │   ├── login/                    # GitHub OAuth login
+│   │   └── [username]/               # Public portfolio (SSR)
+│   │       ├── page.tsx              # Portfolio renderer
+│   │       └── blog/[postSlug]/      # Individual blog posts
 │   │
 │   ├── components/
-│   │   └── admin/
-│   │       └── ImageUpload.tsx    # Reusable Cloudinary upload
+│   │   ├── admin/                    # Admin UI (Sidebar, FormFields, ImageUpload)
+│   │   └── public/                   # Public portfolio section components
 │   │
 │   ├── lib/
-│   │   ├── auth.ts               # NextAuth configuration
-│   │   └── prisma.ts             # Prisma client singleton
+│   │   ├── auth.ts                   # NextAuth configuration
+│   │   ├── prisma.ts                 # Prisma client singleton
+│   │   ├── portfolio.ts              # Portfolio data aggregator
+│   │   ├── template-renderer.ts      # Mustache template rendering
+│   │   ├── cloudinary.ts             # Cloudinary helpers
+│   │   └── utils.ts                  # Shared utilities
 │   │
-│   └── templates/                 # Portfolio templates (future)
-│       ├── types.ts               # PortfolioData contract
-│       ├── registry.ts            # Template registry
-│       └── default/               # Fallback template
+│   ├── templates/
+│   │   ├── types.ts                  # PortfolioData TypeScript interface
+│   │   └── default/                  # Default portfolio template
+│   │       ├── DefaultTemplate.tsx
+│   │       ├── components/           # Navbar, ChatWidget, ThemeToggle
+│   │       └── sections/             # 12+ renderable sections
+│   │
+│   └── types/
+│       └── next-auth.d.ts            # NextAuth type extensions
 │
-├── public/
-├── .env                           # Environment variables (not committed)
-├── .env.example                   # Template for env vars
-├── next.config.js
-├── tailwind.config.ts
+├── public/                           # Static assets
+├── .env.example                      # Environment variables template
+├── .gitignore
+├── LICENSE                           # MIT License
+├── next.config.ts
 ├── tsconfig.json
-├── package.json
-└── README.md
+├── postcss.config.mjs
+└── package.json
 ```
 
 ---
 
-## Getting Started
+## Database Schema
 
-### Prerequisites
+14 tables across three layers:
 
-- Node.js 18+
-- npm or yarn
-- GitHub OAuth app (for authentication)
-- Neon PostgreSQL account (free)
-- Cloudinary account (free)
+```
+CORE (NextAuth)
+  User  ─  Account  ─  Session  ─  VerificationToken
 
-### 1. Clone and install
+PORTFOLIO CONTENT
+  PortfolioSettings    Skill              Experience
+  Project              EngineeringHighlight    BlogPost
+  Education            Certification
 
-```bash
-git clone https://github.com/YOUR_USERNAME/portfolio-platform.git
-cd portfolio-platform
-npm install
+ADVANCED FEATURES
+  Resume               CustomTemplate     CustomSection
+  SectionVisibility
 ```
 
-### 2. Set up environment variables
+Key design decisions:
+- All content tables **cascade-delete** on user removal
+- Unique constraints on slug fields (no duplicate URLs)
+- PostgreSQL arrays for tech stacks and tags
+- JSON fields for complex structures (social links, section order)
+- `displayOrder` fields for drag-and-drop reordering
 
-```bash
-cp .env.example .env
-```
-
-Fill in `.env`:
-
-```env
-# Database (Neon)
-DATABASE_URL="postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/portfolio?sslmode=require"
-DIRECT_URL="postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/portfolio?sslmode=require"
-
-# NextAuth
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"
-
-# GitHub OAuth
-GITHUB_ID="your_github_oauth_app_id"
-GITHUB_SECRET="your_github_oauth_app_secret"
-
-# Cloudinary
-CLOUDINARY_CLOUD_NAME="your_cloud_name"
-CLOUDINARY_API_KEY="your_api_key"
-CLOUDINARY_API_SECRET="your_api_secret"
-```
-
-### 3. Set up the database
-
-```bash
-npx prisma db push
-npx prisma generate
-```
-
-### 4. Run development server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000)
-
-### 5. Deploy to Vercel
-
-```bash
-npm i -g vercel
-vercel
-```
-
-Set environment variables in Vercel dashboard → Settings → Environment Variables.
+Full schema: [`prisma/schema.prisma`](prisma/schema.prisma)
 
 ---
 
 ## Architecture
 
-### Data Flow
-
 ```
-┌─────────────┐     ┌──────────────┐     ┌──────────────┐
-│   Admin UI   │────▶│  API Routes  │────▶│  Neon Postgres│
-│  (React)     │◀────│  (Next.js)   │◀────│  (via Prisma) │
-└─────────────┘     └──────────────┘     └──────────────┘
+┌─────────────┐     ┌──────────────┐     ┌───────────────┐
+│  Admin UI    │────▶│  API Routes  │────▶│ Neon PostgreSQL│
+│  (React)     │◀────│  (Next.js)   │◀────│ (via Prisma)   │
+└─────────────┘     └──────┬───────┘     └───────────────┘
                            │
-                    ┌──────┴──────┐
-                    │  Cloudinary  │
-                    │  (images)    │
-                    └─────────────┘
+                   ┌───────┼───────┐
+                   │       │       │
+              Cloudinary  Groq   texlive.net
+              (images)   Claude   (LaTeX→PDF)
+                         Gemini
 
-┌─────────────┐     ┌──────────────┐     ┌──────────────┐
-│  Visitor     │────▶│  /[username] │────▶│  Neon Postgres│
-│  Browser     │◀────│  SSR page    │◀────│  (read-only)  │
-└─────────────┘     └──────────────┘     └──────────────┘
+┌─────────────┐     ┌──────────────┐     ┌───────────────┐
+│  Visitor     │────▶│ /[username]  │────▶│ Neon PostgreSQL│
+│  Browser     │◀────│  SSR page    │◀────│ (read-only)    │
+└─────────────┘     └──────────────┘     └───────────────┘
 ```
 
 ### Auth Flow
 
 ```
-User clicks "Sign in with GitHub"
+Sign in with GitHub
   → NextAuth redirects to GitHub OAuth
-  → User authorizes
-  → GitHub returns access_token
+  → User authorizes → GitHub returns access_token
   → NextAuth creates User + Account in DB
-  → Session cookie set
-  → User redirected to /admin
+  → Auto-creates PortfolioSettings + SectionVisibility
+  → Session cookie set → redirect to /admin
 ```
 
-### Admin Route Protection
+### Route Protection
 
-All `/admin/*` routes and `/api/admin/*` endpoints check for a valid session:
+All `/admin/*` and `/api/admin/*` routes validate the session server-side:
 
-```tsx
+```ts
 const session = await getServerSession(authOptions);
-if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-```
-
-### Image Upload Flow
-
-```
-User drags image → ImageUpload component
-  → FormData POST to /api/upload
-  → Server converts to buffer
-  → cloudinary.uploader.upload_stream()
-  → Returns { url, publicId, width, height }
-  → URL stored in the relevant Prisma model
+if (!session?.user?.id) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
 ```
 
 ---
 
 ## API Reference
 
-All admin endpoints require authentication via session cookie.
+All `/api/admin/*` endpoints require authentication via session cookie.
 
-| Method   | Endpoint                      | Description                    |
-|----------|-------------------------------|--------------------------------|
-| `GET`    | `/api/admin/settings`         | Get portfolio settings         |
-| `PUT`    | `/api/admin/settings`         | Update portfolio settings      |
-| `GET`    | `/api/admin/skills`           | List all skills                |
-| `POST`   | `/api/admin/skills`           | Create a skill                 |
-| `PUT`    | `/api/admin/skills`           | Update a skill                 |
-| `DELETE` | `/api/admin/skills?id=xxx`    | Delete a skill                 |
-| `GET`    | `/api/admin/experience`       | List all experiences           |
-| `POST`   | `/api/admin/experience`       | Create an experience           |
-| `PUT`    | `/api/admin/experience`       | Update an experience           |
-| `DELETE` | `/api/admin/experience?id=xxx`| Delete an experience           |
-| `GET`    | `/api/admin/projects`         | List all projects              |
-| `POST`   | `/api/admin/projects`         | Create a project               |
-| `PUT`    | `/api/admin/projects`         | Update a project               |
-| `DELETE` | `/api/admin/projects?id=xxx`  | Delete a project               |
-| `GET`    | `/api/admin/engineering`      | List engineering highlights    |
-| `POST`   | `/api/admin/engineering`      | Create a highlight             |
-| `PUT`    | `/api/admin/engineering`      | Update a highlight             |
-| `DELETE` | `/api/admin/engineering?id=xxx`| Delete a highlight            |
-| `GET`    | `/api/admin/blog`             | List all blog posts            |
-| `POST`   | `/api/admin/blog`             | Create a blog post             |
-| `PUT`    | `/api/admin/blog`             | Update a blog post             |
-| `DELETE` | `/api/admin/blog?id=xxx`      | Delete a blog post             |
-| `GET`    | `/api/admin/education`        | List education entries         |
-| `POST`   | `/api/admin/education`        | Create an entry                |
-| `PUT`    | `/api/admin/education`        | Update an entry                |
-| `DELETE` | `/api/admin/education?id=xxx` | Delete an entry                |
-| `GET`    | `/api/admin/certifications`   | List certifications            |
-| `POST`   | `/api/admin/certifications`   | Create a certification         |
-| `PUT`    | `/api/admin/certifications`   | Update a certification         |
-| `DELETE` | `/api/admin/certifications?id=xxx`| Delete a certification     |
-| `GET`    | `/api/admin/sections`         | Get section visibility         |
-| `PUT`    | `/api/admin/sections`         | Update visibility & order      |
-| `POST`   | `/api/upload`                 | Upload image to Cloudinary     |
+### Content CRUD
 
----
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` `PUT` | `/api/admin/settings` | Portfolio settings |
+| `GET` `POST` `PUT` `DELETE` | `/api/admin/skills` | Skills |
+| `GET` `POST` `PUT` `DELETE` | `/api/admin/experience` | Work experience |
+| `GET` `POST` `PUT` `DELETE` | `/api/admin/projects` | Projects |
+| `GET` `POST` `PUT` `DELETE` | `/api/admin/engineering` | Engineering highlights |
+| `GET` `POST` `PUT` `DELETE` | `/api/admin/blog` | Blog posts |
+| `GET` `POST` `PUT` `DELETE` | `/api/admin/education` | Education |
+| `GET` `POST` `PUT` `DELETE` | `/api/admin/certifications` | Certifications |
+| `GET` `POST` `PUT` `DELETE` | `/api/admin/custom-sections` | Custom sections |
+| `GET` `PUT` | `/api/admin/sections` | Section visibility & order |
 
-## Roadmap
+### AI & Resume
 
-### Phase 1 — Foundation ✅
-> Auth, database, admin dashboard core
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/admin/import/resume` | Parse PDF resume via AI → structured JSON |
+| `POST` | `/api/admin/import/save` | Persist parsed resume data to DB |
+| `GET` `POST` `PUT` `DELETE` | `/api/admin/resume` | Resume CRUD |
+| `POST` | `/api/admin/resume/compile` | Compile LaTeX → PDF via texlive.net |
+| `POST` | `/api/admin/resume/tailor` | AI-tailored resume variant |
 
-- [x] Project scaffolding (Next.js 14 + TypeScript + Tailwind)
-- [x] Neon PostgreSQL + Prisma 6 setup
-- [x] NextAuth with GitHub OAuth
-- [x] Portfolio settings admin page
-- [x] Skills CRUD with categories
-- [x] Experience CRUD with timeline
+### Templates & Utilities
 
-### Phase 2 — Content Management 🔧
-> Complete admin dashboard with all content types
-
-- [x] Prisma schema for all 10 tables
-- [ ] Projects admin page + API
-- [ ] Engineering highlights admin page + API
-- [ ] Blog admin page + API (Markdown editor)
-- [ ] Education admin page + API
-- [ ] Certifications admin page + API
-- [ ] Sections visibility & reorder admin page + API
-- [ ] Cloudinary image upload integration
-- [ ] Admin sidebar navigation update
-
-### Phase 3 — Public Portfolio 🔜
-> Render portfolios from database
-
-- [ ] Dynamic public route /[username]
-- [ ] Default portfolio template
-- [ ] SEO meta tags (Open Graph, Twitter cards)
-- [ ] Responsive design (mobile-first)
-- [ ] Section ordering from SectionVisibility
-
-### Phase 4 — AI Resume Import 🔜
-> Upload a PDF, get a portfolio instantly
-
-- [ ] PDF upload + text extraction (pdf-parse)
-- [ ] Claude API structured extraction prompt
-- [ ] JSON → Prisma bulk insert pipeline
-- [ ] LinkedIn PDF variant parsing
-- [ ] "Review & Edit" step before saving
-- [ ] Progress indicator during processing
-
-### Phase 5 — AI Template Engine 🔜
-> Generate unlimited portfolio designs
-
-- [ ] PortfolioData contract (shared interface)
-- [ ] Template storage model (CustomTemplate table)
-- [ ] "Import from URL" — fetch page + Claude converts to template
-- [ ] "Describe your template" — text prompt to HTML+CSS
-- [ ] Template preview (sandboxed rendering)
-- [ ] Template picker in admin settings
-- [ ] One default fallback template
-
-### Phase 6 — AI Chatbot 🔜
-> Every portfolio gets a conversational assistant
-
-- [ ] Chat API route (Groq free tier / Llama 3)
-- [ ] Floating chat widget component
-- [ ] Portfolio data injection as context
-- [ ] Rate limiting (50 messages/day per portfolio)
-- [ ] Response caching for common questions
-
-### Phase 7 — Publishing Pipeline 🔜
-> One-click publish to free hosting
-
-- [ ] Static HTML export generator
-- [ ] GitHub API integration (push to user's repo)
-- [ ] GitHub Pages auto-deployment
-- [ ] Custom domain CNAME setup
-- [ ] "Publish" button in admin dashboard
-- [ ] Publish status tracking
-
-### Phase 8 — Polish 🔜
-> Production-ready quality
-
-- [ ] Light/dark theme toggle on portfolios
-- [ ] Framer Motion scroll animations
-- [ ] Download resume button (auto-generated PDF)
-- [ ] Analytics dashboard (page views, visitors)
-- [ ] Template marketplace (share/discover designs)
-- [ ] Multi-language support (i18n)
-- [ ] PWA support
-- [ ] Lighthouse 90+ score
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` `POST` | `/api/admin/templates` | Template CRUD |
+| `POST` | `/api/admin/templates/generate` | AI-powered template generation |
+| `GET` | `/api/admin/templates/gallery` | Browse template gallery |
+| `GET` | `/api/admin/templates/preview` | Preview a template |
+| `GET` | `/api/admin/templates/detail` | Template detail view |
+| `GET` | `/api/admin/stats` | Dashboard statistics |
+| `POST` | `/api/upload` | Upload image to Cloudinary |
+| `POST` | `/api/chat/[username]` | AI chatbot (per portfolio) |
 
 ---
 
 ## Environment Variables
 
-| Variable                | Required | Description                      |
-|-------------------------|----------|----------------------------------|
-| `DATABASE_URL`          | Yes      | Neon PostgreSQL connection string |
-| `DIRECT_URL`            | Yes      | Neon direct connection (migrations)|
-| `NEXTAUTH_URL`          | Yes      | App URL (http://localhost:3000)  |
-| `NEXTAUTH_SECRET`       | Yes      | Random 32-char secret            |
-| `GITHUB_ID`             | Yes      | GitHub OAuth App client ID       |
-| `GITHUB_SECRET`         | Yes      | GitHub OAuth App client secret   |
-| `CLOUDINARY_CLOUD_NAME` | Yes      | Cloudinary cloud name            |
-| `CLOUDINARY_API_KEY`    | Yes      | Cloudinary API key               |
-| `CLOUDINARY_API_SECRET` | Yes      | Cloudinary API secret            |
-| `GROQ_API_KEY`          | No       | Groq API key (for AI chatbot)    |
-| `ANTHROPIC_API_KEY`     | No       | Claude API key (for AI features) |
+Copy `.env.example` to `.env` and fill in your values.
+
+| Variable | Required | Description |
+|---|---|---|
+| `DATABASE_URL` | Yes | Neon PostgreSQL pooled connection string |
+| `DIRECT_URL` | Yes | Neon direct connection (for migrations) |
+| `NEXTAUTH_URL` | Yes | App URL (`http://localhost:3000` for local) |
+| `NEXTAUTH_SECRET` | Yes | Random secret — generate with `openssl rand -base64 32` |
+| `GITHUB_CLIENT_ID` | Yes | GitHub OAuth App client ID |
+| `GITHUB_CLIENT_SECRET` | Yes | GitHub OAuth App client secret |
+| `GITHUB_TOKEN` | No | GitHub PAT — avoids API rate limits for GitHub section |
+| `PORTFOLIO_OWNER_SLUG` | No | Username to redirect `/` to (single-user mode) |
+| `AI_PROVIDER` | No | `groq` (default) / `gemini` / `anthropic` |
+| `GROQ_API_KEY` | No | [Groq](https://console.groq.com/) API key (free, recommended) |
+| `GEMINI_API_KEY` | No | Google Gemini API key |
+| `ANTHROPIC_API_KEY` | No | Anthropic Claude API key |
+| `CLOUDINARY_CLOUD_NAME` | Yes | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY` | Yes | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Yes | Cloudinary API secret |
+
+> **Note:** Never commit `.env` or `.env.local` to version control. Only `.env.example` (with empty values) should be committed.
 
 ---
 
-## Contributing
+## Deployment
 
-This is currently a personal project, but contributions are welcome once the core is stable.
+### Vercel (Recommended)
+
+```bash
+npm i -g vercel
+vercel
+```
+
+Then set all environment variables in **Vercel Dashboard > Settings > Environment Variables**.
+
+### Self-Hosting
+
+Any platform that supports Node.js 18+ and Next.js:
+
+```bash
+npm run build
+npm run start
+```
+
+Ensure `DATABASE_URL`, `NEXTAUTH_URL`, and all required environment variables are set in your hosting environment.
+
+### Recommended Free-Tier Stack
+
+| Service | Purpose | Free Tier |
+|---|---|---|
+| [Vercel](https://vercel.com/) | Hosting | Generous free tier |
+| [Neon](https://neon.tech/) | PostgreSQL | 0.5 GB storage |
+| [Cloudinary](https://cloudinary.com/) | Images | 25 GB bandwidth/month |
+| [Groq](https://groq.com/) | AI API | Free tier available |
+| [is-a.dev](https://is-a.dev/) | Domain | Free `.is-a.dev` subdomain |
+
+**Total monthly cost: $0**
+
+---
+
+## Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npx prisma db push` | Push schema changes to database |
+| `npx prisma generate` | Regenerate Prisma client |
+| `npx prisma studio` | Open database GUI |
+| `npx tsx prisma/seed.ts` | Seed the database |
+
+---
+
+## Security
+
+- All admin routes are protected by server-side session validation
+- OAuth tokens are managed by NextAuth.js (never exposed to client)
+- Environment variables containing secrets (API keys, DB credentials) must never be committed
+- All user content is scoped by `userId` — users can only access their own data
+- Cloudinary uploads are server-side (API secret never reaches the client)
+- Input from AI providers is treated as untrusted (parsed and validated before storage)
+
+If you discover a security vulnerability, please report it privately rather than opening a public issue.
+
+---
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Commit your changes (`git commit -m 'Add your feature'`)
+4. Push to the branch 🚀 (`git push origin feature/your-feature`)
 5. Open a Pull Request
+
+Please ensure your code:
+- ✅ Follows existing patterns and conventions
+- ✅ Passes `npm run lint`
+- ✅ Does not introduce security vulnerabilities
+- ✅ Includes descriptive commit messages
 
 ---
 
 ## License
 
-MIT — do whatever you want with it.
+Copyright (c) 2025 Kousik Karanam.
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+```
+MIT License
+
+Copyright (c) 2025 Kousik Karanam
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
 ---
 
-Built by [Kousik Karanam](https://kousikkaranam.is-a.dev) with Next.js, Prisma, and a lot of coffee.
+## Third-Party Licenses & Acknowledgments
+
+This project incorporates the following open-source software:
+
+| Package | License | Copyright |
+|---|---|---|
+| [Next.js](https://nextjs.org/) | MIT | Vercel, Inc. |
+| [React](https://react.dev/) | MIT | Meta Platforms, Inc. |
+| [Tailwind CSS](https://tailwindcss.com/) | MIT | Tailwind Labs, Inc. |
+| [Prisma](https://www.prisma.io/) | Apache-2.0 | Prisma Data, Inc. |
+| [NextAuth.js](https://next-auth.js.org/) | ISC | Balazs Orban & contributors |
+| [Framer Motion](https://www.framer.com/motion/) | MIT | Framer B.V. |
+| [Lucide React](https://lucide.dev/) | ISC | Lucide contributors |
+| [Cloudinary SDK](https://cloudinary.com/) | MIT | Cloudinary, Ltd. |
+| [Groq SDK](https://groq.com/) | Apache-2.0 | Groq, Inc. |
+| [Anthropic SDK](https://www.anthropic.com/) | MIT | Anthropic, PBC |
+| [Google Generative AI](https://ai.google.dev/) | Apache-2.0 | Google LLC |
+| [Monaco Editor](https://microsoft.github.io/monaco-editor/) | MIT | Microsoft Corporation |
+| [react-markdown](https://github.com/remarkjs/react-markdown) | MIT | Titus Wormer |
+| [Mustache.js](https://mustache.github.io/) | MIT | Jan Lehnardt & contributors |
+| [docx](https://github.com/dolanmiu/docx) | MIT | Dolan Miu |
+| [unpdf](https://github.com/unjs/unpdf) | MIT | unjs contributors |
+| [pdf-parse](https://www.npmjs.com/package/pdf-parse) | MIT | Modood Alvi |
+| [react-easy-crop](https://github.com/ValentinH/react-easy-crop) | MIT | Valentin Hervieu |
+| [TypeScript](https://www.typescriptlang.org/) | Apache-2.0 | Microsoft Corporation |
+| [ESLint](https://eslint.org/) | MIT | OpenJS Foundation |
+
+Full license texts for all dependencies are available in their respective `node_modules/<package>/LICENSE` files.
+
+### Services
+
+| Service | Usage |
+|---|---|
+| [Neon](https://neon.tech/) | Serverless PostgreSQL hosting |
+| [Vercel](https://vercel.com/) | Application hosting and deployment |
+| [Cloudinary](https://cloudinary.com/) | Image CDN and transformations |
+| [texlive.net](https://texlive.net/) | LaTeX compilation API |
+| [is-a.dev](https://is-a.dev/) | Free developer subdomains |
+
+---
+
+<p align="center">
+  Built by <a href="kousikkaranam.is-a.dev">Kousik Karanam</a>
+  <br />
+  <sub>Copyright &copy; 2025 Kousik Karanam. All rights reserved.</sub>
+</p>
