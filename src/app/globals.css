@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
   --background: #ffffff;
@@ -23,4 +24,39 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ── Portfolio theme system ──────────────────────────────────── */
+#portfolio-root[data-theme="dark"] {
+  --bg: var(--dark-bg);
+  --bg-card: var(--dark-bg-card);
+  --border: var(--dark-border);
+  --border-light: var(--dark-border-light);
+  --text: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --accent: var(--dark-accent);
+  --accent-fg: #0a0a0a;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#portfolio-root[data-theme="light"] {
+  --bg: var(--light-bg);
+  --bg-card: var(--light-bg-card);
+  --border: var(--light-border);
+  --border-light: var(--light-border-light);
+  --text: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --accent: var(--light-accent);
+  --accent-fg: #0a0a0a;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Smooth transitions on theme switch */
+#portfolio-root,
+#portfolio-root * {
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }

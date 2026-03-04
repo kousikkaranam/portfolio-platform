@@ -14,7 +14,9 @@
     "@google/generative-ai": "^0.24.1",
     "@monaco-editor/react": "^4.7.0",
     "@prisma/client": "^6.19.2",
+    "@tailwindcss/typography": "^0.5.19",
     "cloudinary": "^2.9.0",
+    "country-codes-list": "^2.0.0",
     "dotenv": "^17.3.1",
     "framer-motion": "^12.34.5",
     "groq-sdk": "^0.37.0",
@@ -26,6 +28,7 @@
     "prisma": "^6.19.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-easy-crop": "^5.5.6",
     "react-markdown": "^10.1.0",
     "unpdf": "^1.4.0"
   },

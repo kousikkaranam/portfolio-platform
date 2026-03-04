@@ -35,6 +35,7 @@ model User {
   certifications        Certification[]
   sectionVisibility     SectionVisibility?
   customTemplates       CustomTemplate[]
+  customSections        CustomSection[]
 
   @@map("users")
 }
@@ -316,4 +317,23 @@ model CustomTemplate {
 
   @@index([userId])
   @@map("custom_templates")
+}
+
+// ─── Custom Sections ─────────────────────────────────────
+
+model CustomSection {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String   @db.VarChar(200)
+  content      String?  @db.Text
+  isVisible    Boolean  @default(true)
+  displayOrder Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, displayOrder])
+  @@map("custom_sections")
 }

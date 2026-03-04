@@ -25,6 +25,7 @@ export async function fetchPortfolioData(slug: string): Promise<PortfolioData | 
       },
       education: { orderBy: { displayOrder: "asc" } },
       certifications: { orderBy: { displayOrder: "asc" } },
+      customSections: { orderBy: { displayOrder: "asc" } },
       sectionVisibility: true,
     },
   });
@@ -129,6 +130,13 @@ export async function fetchPortfolioData(slug: string): Promise<PortfolioData | 
       issuer: c.issuer,
       issueDate: c.issueDate?.toISOString() || null,
       credentialUrl: c.credentialUrl,
+    })),
+    customSections: user.customSections.map((cs) => ({
+      id: cs.id,
+      title: cs.title,
+      content: cs.content,
+      isVisible: cs.isVisible,
+      displayOrder: cs.displayOrder,
     })),
     sections: {
       showSkills: sv?.showSkills ?? true,

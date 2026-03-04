@@ -18,7 +18,21 @@ export interface PortfolioData {
       github?: string;
       linkedin?: string;
       twitter?: string;
+      instagram?: string;
+      youtube?: string;
       email?: string;
+      phone?: string;
+      phoneCode?: string;
+      customLinkLabel?: string;
+      customLinkUrl?: string;
+      contactTitle?: string;
+      contactMessage?: string;
+      heroImageShape?: "circle" | "rounded" | "square";
+      heroImageSize?: "sm" | "md" | "lg";
+      heroImageEffect?: "none" | "glow" | "spin-ring";
+      darkBg?: string;
+      lightBg?: string;
+      lightAccent?: string;
     } | null;
     theme: string;
     accentColor: string;
@@ -99,6 +113,13 @@ export interface PortfolioData {
     issuer: string | null;
     issueDate: string | null;
     credentialUrl: string | null;
+  }>;
+  customSections: Array<{
+    id: string;
+    title: string;
+    content: string | null;
+    isVisible: boolean;
+    displayOrder: number;
   }>;
   sections: {
     showSkills: boolean;

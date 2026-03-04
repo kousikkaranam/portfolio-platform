@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, X, Loader2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { Plus, Pencil, Trash2, X, Loader2, Eye } from "lucide-react";
 
 interface Experience {
   id: string;
@@ -36,6 +37,7 @@ export default function ExperiencePage() {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Experience | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [descPreview, setDescPreview] = useState(false);
 
   const fetchItems = async () => {
     const r = await fetch("/api/admin/experience");
@@ -48,11 +50,13 @@ export default function ExperiencePage() {
   const openAdd = () => {
     setEditing(null);
     setForm(emptyForm);
+    setDescPreview(false);
     setShowModal(true);
   };
 
   const openEdit = (exp: Experience) => {
     setEditing(exp);
+    setDescPreview(false);
     setForm({
       company: exp.company,
       role: exp.role,
@@ -217,13 +221,40 @@ export default function ExperiencePage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1.5">Description</label>
-                <textarea
-                  rows={3}
-                  value={form.description}
-                  onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                  className="w-full bg-[#0b0f19] border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#5eead4] resize-none"
-                />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm text-gray-400">Description <span className="text-gray-600 text-xs">(Markdown supported)</span></label>
+                  <button
+                    type="button"
+                    onClick={() => setDescPreview((v) => !v)}
+                    className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border transition-colors cursor-pointer ${
+                      descPreview
+                        ? "text-[#5eead4] border-[#5eead4]/40 bg-[#5eead4]/10"
+                        : "text-gray-500 border-gray-700 hover:text-white hover:border-gray-500"
+                    }`}
+                  >
+                    <Eye size={12} />
+                    {descPreview ? "Edit" : "Preview"}
+                  </button>
+                </div>
+                {descPreview ? (
+                  <div className="min-h-[80px] bg-[#0b0f19] border border-gray-700 rounded-lg px-4 py-2.5 prose prose-invert prose-sm max-w-none
+                    prose-headings:text-white prose-p:text-gray-400 prose-strong:text-white
+                    prose-a:text-[#5eead4] prose-ul:text-gray-400 prose-ol:text-gray-400
+                    prose-li:marker:text-gray-600">
+                    {form.description
+                      ? <ReactMarkdown>{form.description}</ReactMarkdown>
+                      : <p className="text-gray-600 text-sm italic">Nothing to preview yet.</p>
+                    }
+                  </div>
+                ) : (
+                  <textarea
+                    rows={4}
+                    value={form.description}
+                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    placeholder="Describe your role and responsibilities…&#10;&#10;**Bold**, *italic*, - bullet lists, [links](url)"
+                    className="w-full bg-[#0b0f19] border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#5eead4] resize-none font-mono placeholder:text-gray-600 leading-relaxed"
+                  />
+                )}
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-1.5">Location</label>

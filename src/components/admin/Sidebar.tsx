@@ -18,6 +18,7 @@ import {
   ExternalLink,
   Sparkles,
   LayoutTemplate,
+  SquarePen,
 } from "lucide-react";
 
 const navItems = [
@@ -33,6 +34,7 @@ const navItems = [
   { href: "/admin/education", label: "Education", icon: GraduationCap },
   { href: "/admin/certifications", label: "Certifications", icon: Award },
   { href: "/admin/sections", label: "Sections", icon: Layers },
+  { href: "/admin/custom-sections", label: "Custom Sections", icon: SquarePen },
 ];
 
 export default function Sidebar() {

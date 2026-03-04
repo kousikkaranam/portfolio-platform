@@ -21,7 +21,10 @@ Single values (use as {{variableName}}):
   {{location}}    — city/country
   {{accentColor}} — user's accent color hex (e.g. #5eead4) — use in styles
   {{avatar}}      — profile image URL
-  {{github}}      {{linkedin}}  {{twitter}}  {{email}}  {{resumeUrl}}
+  {{github}}  {{linkedin}}  {{twitter}}  {{instagram}}  {{youtube}}  {{email}}  {{phone}}  {{resumeUrl}}
+  {{customLinkLabel}}  {{customLinkUrl}}  — custom link (e.g. Medium, Dribbble)
+  {{contactTitle}}     — contact section heading
+  {{contactMessage}}   — contact section body text
 
 Loops — wrap content between section tags:
   {{#experiences}} {{role}} {{company}} {{startDate}} {{endDate}} {{description}} {{techStackStr}} {{/experiences}}

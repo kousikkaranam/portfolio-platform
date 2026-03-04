@@ -1,5 +1,6 @@
 
 import type { PortfolioData } from "@/templates/types";
+import { derivePalette } from "@/lib/colorUtils";
 import Navbar from "./components/Navbar";
 import HeroSection from "./sections/HeroSection";
 import SkillsSection from "./sections/SkillsSection";
@@ -11,6 +12,7 @@ import EducationSection from "./sections/EducationSection";
 import CertificationsSection from "./sections/CertificationsSection";
 import GitHubSection from "./sections/GitHubSection";
 import ContactSection from "./sections/ContactSection";
+import CustomSectionRenderer from "./sections/CustomSectionRenderer";
 
 const SECTION_COMPONENTS: Record<string, React.FC<{ data: PortfolioData }>> = {
   hero: HeroSection,
@@ -37,7 +39,6 @@ const SECTION_VISIBILITY: Record<string, keyof PortfolioData["sections"]> = {
   contact: "showContact",
 };
 
-// Sections that are skipped if they have no data
 const DATA_GUARDS: Record<string, (data: PortfolioData) => boolean> = {
   skills: (d) => d.skills.length > 0,
   experience: (d) => d.experiences.length > 0,
@@ -50,29 +51,58 @@ const DATA_GUARDS: Record<string, (data: PortfolioData) => boolean> = {
 };
 
 export default function DefaultTemplate({ data }: { data: PortfolioData }) {
-  const accent = data.settings.accentColor || "#5eead4";
+  const s = (data.settings.socialLinks ?? {}) as Record<string, string>;
+  const darkAccent = data.settings.accentColor || "#5eead4";
+  const lightAccent = s.lightAccent || darkAccent;
+  const darkBg = s.darkBg || "#0a0a0a";
+  const lightBg = s.lightBg || "#ffffff";
+
+  const dark = derivePalette(darkBg, "dark");
+  const light = derivePalette(lightBg, "light");
 
   return (
-    <div className="min-h-screen bg-[#0b0f19] text-gray-300" style={{ "--accent": accent } as React.CSSProperties}>
+    <div
+      id="portfolio-root"
+      data-theme="dark"
+      className="min-h-screen"
+      style={{
+        "--dark-bg": dark.bg,
+        "--dark-bg-card": dark.bgCard,
+        "--dark-border": dark.border,
+        "--dark-border-light": dark.borderLight,
+        "--dark-accent": darkAccent,
+        "--light-bg": light.bg,
+        "--light-bg-card": light.bgCard,
+        "--light-border": light.border,
+        "--light-border-light": light.borderLight,
+        "--light-accent": lightAccent,
+      } as React.CSSProperties}
+    >
       <Navbar data={data} />
 
       {data.sections.sectionOrder.map((key) => {
-        // Visibility check
+        if (key.startsWith("custom_")) {
+          const id = key.slice(7);
+          const cs = data.customSections.find((s) => s.id === id);
+          if (!cs || !cs.isVisible) return null;
+          return (
+            <div key={key} id={key} className="scroll-mt-16">
+              <CustomSectionRenderer title={cs.title} content={cs.content} accentColor={darkAccent} />
+            </div>
+          );
+        }
+
         const visField = SECTION_VISIBILITY[key];
         if (visField && !data.sections[visField]) return null;
 
-        // Data existence check
         const guard = DATA_GUARDS[key];
         if (guard && !guard(data)) return null;
 
         const Component = SECTION_COMPONENTS[key];
         if (!Component) return null;
 
-        // Hero gets pt-0 (Navbar overlaps), all others get scroll padding
-        const isHero = key === "hero";
-
         return (
-          <div key={key} id={key} className={isHero ? "" : "scroll-mt-16"}>
+          <div key={key} id={key} className={key === "hero" ? "" : "scroll-mt-16"}>
             <Component data={data} />
           </div>
         );

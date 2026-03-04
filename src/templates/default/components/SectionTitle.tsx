@@ -9,7 +9,7 @@ export default function SectionTitle({
 }) {
   return (
     <div className={center ? "text-center" : ""}>
-      <h2 className="text-3xl font-bold text-white">{title}</h2>
+      <h2 className="text-3xl font-bold" style={{ color: "var(--text)" }}>{title}</h2>
       <div
         className="h-1 w-12 rounded-full mt-3"
         style={{

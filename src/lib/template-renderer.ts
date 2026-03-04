@@ -23,10 +23,17 @@ export function buildTemplateContext(data: PortfolioData): Record<string, unknow
     available:   data.settings.availableForHire,
 
     // Social
-    email:    sl.email    ?? "",
-    github:   sl.github   ?? "",
-    linkedin: sl.linkedin ?? "",
-    twitter:  sl.twitter  ?? "",
+    email:           sl.email           ?? "",
+    phone:           sl.phone           ? `${sl.phoneCode ?? ""} ${sl.phone}`.trim() : "",
+    github:          sl.github          ?? "",
+    linkedin:        sl.linkedin        ?? "",
+    twitter:         sl.twitter         ?? "",
+    instagram:       sl.instagram       ?? "",
+    youtube:         sl.youtube         ?? "",
+    customLinkLabel: sl.customLinkLabel ?? "",
+    customLinkUrl:   sl.customLinkUrl   ?? "",
+    contactTitle:    sl.contactTitle    ?? "Get In Touch",
+    contactMessage:  sl.contactMessage  ?? "",
 
     // Experience
     experiences: data.experiences.map((e) => ({
