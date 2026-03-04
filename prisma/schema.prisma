@@ -1,0 +1,277 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── NextAuth Required Tables ───────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  slug          String?   @unique
+  githubUsername String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  accounts              Account[]
+  portfolioSettings     PortfolioSettings?
+  skills                Skill[]
+  experiences           Experience[]
+  projects              Project[]
+  engineeringHighlights EngineeringHighlight[]
+  blogPosts             BlogPost[]
+  education             Education[]
+  certifications        Certification[]
+  sectionVisibility     SectionVisibility?
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// ─── Portfolio Settings ─────────────────────────────────
+
+model PortfolioSettings {
+  id              String  @id @default(cuid())
+  userId          String  @unique
+  siteTitle       String? @db.VarChar(200)
+  tagline         String? @db.VarChar(500)
+  bio             String? @db.Text
+  heroImageUrl    String? @db.Text
+  resumeUrl       String? @db.Text
+  location        String? @db.VarChar(100)
+  availableForHire Boolean @default(false)
+  socialLinks     Json?   // {github, linkedin, twitter, email}
+  theme           String  @default("dark") @db.VarChar(20)
+  accentColor     String  @default("#5eead4") @db.VarChar(7)
+  metaTitle       String? @db.VarChar(100)
+  metaDescription String? @db.VarChar(300)
+  customDomain    String? @db.VarChar(255)
+  analyticsId     String? @db.VarChar(50)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("portfolio_settings")
+}
+
+// ─── Skills ─────────────────────────────────────────────
+
+model Skill {
+  id           String  @id @default(cuid())
+  userId       String
+  category     String  @db.VarChar(50)
+  name         String  @db.VarChar(100)
+  iconUrl      String? @db.Text
+  proficiency  Int?    @db.SmallInt
+  displayOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, category, displayOrder])
+  @@map("skills")
+}
+
+// ─── Experience ─────────────────────────────────────────
+
+model Experience {
+  id             String   @id @default(cuid())
+  userId         String
+  company        String   @db.VarChar(200)
+  role           String   @db.VarChar(200)
+  description    String?  @db.Text
+  companyLogoUrl String?  @db.Text
+  location       String?  @db.VarChar(100)
+  startDate      DateTime @db.Date
+  endDate        DateTime? @db.Date
+  isCurrent      Boolean  @default(false)
+  techStack      String[] // PostgreSQL array
+  displayOrder   Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, displayOrder])
+  @@map("experiences")
+}
+
+// ─── Projects ───────────────────────────────────────────
+
+model Project {
+  id              String   @id @default(cuid())
+  userId          String
+  title           String   @db.VarChar(200)
+  slug            String   @db.VarChar(200)
+  description     String?  @db.Text
+  longDescription String?  @db.Text
+  techStack       String[]
+  githubUrl       String?  @db.Text
+  liveUrl         String?  @db.Text
+  thumbnailUrl    String?  @db.Text
+  screenshots     String[]
+  architectureUrl String?  @db.Text
+  category        String?  @db.VarChar(50)
+  isFeatured      Boolean  @default(false)
+  displayOrder    Int      @default(0)
+  status          String   @default("published") @db.VarChar(20)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, slug])
+  @@index([userId, isFeatured, displayOrder])
+  @@map("projects")
+}
+
+// ─── Engineering Highlights ─────────────────────────────
+
+model EngineeringHighlight {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String   @db.VarChar(200)
+  slug         String   @db.VarChar(200)
+  summary      String?  @db.Text
+  content      String?  @db.Text
+  techStack    String[]
+  diagramUrl   String?  @db.Text
+  impact       String?  @db.Text
+  isFeatured   Boolean  @default(false)
+  displayOrder Int      @default(0)
+  status       String   @default("published") @db.VarChar(20)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, slug])
+  @@index([userId, isFeatured, displayOrder])
+  @@map("engineering_highlights")
+}
+
+// ─── Blog Posts ─────────────────────────────────────────
+
+model BlogPost {
+  id            String    @id @default(cuid())
+  userId        String
+  title         String    @db.VarChar(300)
+  slug          String    @db.VarChar(300)
+  excerpt       String?   @db.VarChar(500)
+  content       String?   @db.Text
+  coverImageUrl String?   @db.Text
+  tags          String[]
+  readTimeMin   Int?      @db.SmallInt
+  status        String    @default("draft") @db.VarChar(20)
+  publishedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, slug])
+  @@index([userId, status])
+  @@map("blog_posts")
+}
+
+// ─── Education ──────────────────────────────────────────
+
+model Education {
+  id           String  @id @default(cuid())
+  userId       String
+  institution  String  @db.VarChar(200)
+  degree       String? @db.VarChar(200)
+  field        String? @db.VarChar(200)
+  startYear    Int?    @db.SmallInt
+  endYear      Int?    @db.SmallInt
+  description  String? @db.Text
+  displayOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, displayOrder])
+  @@map("education")
+}
+
+// ─── Certifications ─────────────────────────────────────
+
+model Certification {
+  id            String    @id @default(cuid())
+  userId        String
+  name          String    @db.VarChar(200)
+  issuer        String?   @db.VarChar(200)
+  issueDate     DateTime? @db.Date
+  credentialUrl String?   @db.Text
+  displayOrder  Int       @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, displayOrder])
+  @@map("certifications")
+}
+
+// ─── Section Visibility ─────────────────────────────────
+
+model SectionVisibility {
+  id                 String  @id @default(cuid())
+  userId             String  @unique
+  showSkills         Boolean @default(true)
+  showExperience     Boolean @default(true)
+  showProjects       Boolean @default(true)
+  showEngineering    Boolean @default(true)
+  showBlog           Boolean @default(true)
+  showEducation      Boolean @default(true)
+  showCertifications Boolean @default(true)
+  showGithub         Boolean @default(true)
+  showContact        Boolean @default(true)
+  sectionOrder       Json?   // ["hero","skills","projects","experience",...]
+
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("section_visibility")
+}
