@@ -1,653 +1,602 @@
-# Portfolio Platform — Complete Blueprint
+# Project Blueprint
 
-> A multi-tenant, fully dynamic developer portfolio platform.
-> Zero code changes to update content. Free to deploy and run.
-
----
-
-## 1. Final Tech Stack
-
-### Frontend + Backend (Monorepo)
-```
-Framework       : Next.js 14 (App Router)
-Language        : TypeScript
-Styling         : TailwindCSS
-Animations      : Framer Motion
-ORM             : Prisma
-Auth            : NextAuth.js (GitHub OAuth provider)
-API Layer       : Next.js API Routes (Route Handlers)
-Image Upload    : Cloudinary (free: 25GB bandwidth/mo)
-Markdown        : MDX / react-markdown (for blog posts)
-Icons           : Lucide React
-```
-
-### Database
-```
-PostgreSQL on Neon (free tier: 0.5 GB, 1 project, autoscaling)
-```
-
-### Deployment
-```
-Hosting         : Vercel OR Cloudflare Pages (free tier)
-Domain          : kousik.is-a.dev (free via is-a-dev)
-CI/CD           : Auto-deploy on git push (Vercel/CF built-in)
-```
-
-### Why This Stack
-- Next.js API routes = no separate backend server = no cold starts
-- Prisma = type-safe DB access, easy migrations, works with Neon
-- NextAuth + GitHub OAuth = free auth, no email service needed
-- Everything runs on ONE Vercel/CF deployment = simple, free
-- Spring Boot version kept as separate GitHub repo for showcase
+> Internal architecture document. Covers design decisions, data flow,
+> schema rationale, and implementation details for every feature.
 
 ---
 
-## 2. Multi-Tenancy Model
+## 1. System Overview
 
-### How It Works
 ```
-Each user = 1 row in "User" table
-Each user gets a unique slug: kousik, rahul, etc.
-
-Public URLs:
-  yourapp.vercel.app/kousik       → Kousik's portfolio
-  yourapp.vercel.app/rahul        → Rahul's portfolio
-
-With custom domain (later):
-  kousik.is-a.dev                 → Kousik's portfolio
-
-Admin URLs:
-  yourapp.vercel.app/admin        → Dashboard (auth protected)
-```
-
-### Tenant Isolation
-- Every content table has a `userId` foreign key
-- All queries scoped by `userId` — no data leaks
-- Admin dashboard only shows YOUR content
-- Public routes resolve user by slug from URL
-
----
-
-## 3. Database Schema
-
-### Users
-```sql
-users
-├── id              UUID        PK, default gen_random_uuid()
-├── name            VARCHAR(100)
-├── email           VARCHAR(255) UNIQUE, NOT NULL
-├── slug            VARCHAR(50)  UNIQUE, NOT NULL  -- "kousik"
-├── avatar_url      TEXT
-├── github_username  VARCHAR(100)
-├── provider        VARCHAR(20)  -- "github"
-├── provider_id     VARCHAR(100)
-├── created_at      TIMESTAMPTZ  DEFAULT now()
-└── updated_at      TIMESTAMPTZ  DEFAULT now()
-```
-
-### Portfolio Settings (per-user site config)
-```sql
-portfolio_settings
-├── id              UUID        PK
-├── user_id         UUID        FK → users.id, UNIQUE
-├── site_title      VARCHAR(200)    -- "Kousik Karanam"
-├── tagline         VARCHAR(500)    -- "Backend Engineer"
-├── bio             TEXT            -- Long intro paragraph
-├── hero_image_url  TEXT
-├── resume_url      TEXT
-├── location        VARCHAR(100)
-├── available_for_hire  BOOLEAN  DEFAULT false
-├── social_links    JSONB           -- {github, linkedin, twitter, email}
-├── theme           VARCHAR(20)  DEFAULT 'dark'  -- dark/light/custom
-├── accent_color    VARCHAR(7)   DEFAULT '#5eead4'
-├── meta_title      VARCHAR(100)    -- SEO title
-├── meta_description VARCHAR(300)   -- SEO description
-├── custom_domain   VARCHAR(255)    -- "kousik.is-a.dev" (future)
-├── analytics_id    VARCHAR(50)     -- Google Analytics (optional)
-├── created_at      TIMESTAMPTZ
-└── updated_at      TIMESTAMPTZ
-```
-
-### Skills
-```sql
-skills
-├── id              UUID        PK
-├── user_id         UUID        FK → users.id
-├── category        VARCHAR(50)     -- "Backend", "DevOps", "Database"
-├── name            VARCHAR(100)    -- "Spring Boot"
-├── icon_url        TEXT            -- optional icon
-├── proficiency     SMALLINT        -- 1-5 (optional)
-├── display_order   INTEGER      DEFAULT 0
-├── created_at      TIMESTAMPTZ
-└── updated_at      TIMESTAMPTZ
-
-INDEX: (user_id, category, display_order)
-```
-
-### Experience
-```sql
-experiences
-├── id              UUID        PK
-├── user_id         UUID        FK → users.id
-├── company         VARCHAR(200)
-├── role            VARCHAR(200)
-├── description     TEXT            -- Markdown supported
-├── company_logo_url TEXT
-├── location        VARCHAR(100)
-├── start_date      DATE
-├── end_date        DATE            -- NULL = present
-├── is_current      BOOLEAN      DEFAULT false
-├── tech_stack      TEXT[]          -- {"Java", "Kafka", "Redis"}
-├── display_order   INTEGER      DEFAULT 0
-├── created_at      TIMESTAMPTZ
-└── updated_at      TIMESTAMPTZ
-
-INDEX: (user_id, display_order)
-```
-
-### Projects
-```sql
-projects
-├── id              UUID        PK
-├── user_id         UUID        FK → users.id
-├── title           VARCHAR(200)
-├── slug            VARCHAR(200)    -- URL-friendly title
-├── description     TEXT
-├── long_description TEXT           -- Markdown, detailed writeup
-├── tech_stack      TEXT[]          -- {"Electron", "FastAPI", "MediaPipe"}
-├── github_url      TEXT
-├── live_url        TEXT
-├── thumbnail_url   TEXT
-├── screenshots     TEXT[]          -- array of image URLs
-├── architecture_url TEXT           -- architecture diagram image
-├── category        VARCHAR(50)     -- "personal", "professional", "oss"
-├── is_featured     BOOLEAN      DEFAULT false
-├── display_order   INTEGER      DEFAULT 0
-├── status          VARCHAR(20)  DEFAULT 'published' -- draft/published
-├── created_at      TIMESTAMPTZ
-└── updated_at      TIMESTAMPTZ
-
-INDEX: (user_id, is_featured, display_order)
-INDEX: (user_id, slug) UNIQUE
-```
-
-### Engineering Highlights
-```sql
-engineering_highlights
-├── id              UUID        PK
-├── user_id         UUID        FK → users.id
-├── title           VARCHAR(200)    -- "Kafka Event Pipeline"
-├── slug            VARCHAR(200)
-├── summary         TEXT            -- Short description
-├── content         TEXT            -- Full Markdown writeup
-├── tech_stack      TEXT[]
-├── diagram_url     TEXT            -- Architecture diagram
-├── impact          TEXT            -- "Reduced latency by 40%"
-├── is_featured     BOOLEAN      DEFAULT false
-├── display_order   INTEGER      DEFAULT 0
-├── status          VARCHAR(20)  DEFAULT 'published'
-├── created_at      TIMESTAMPTZ
-└── updated_at      TIMESTAMPTZ
-
-INDEX: (user_id, is_featured, display_order)
-```
-
-### Blog Posts
-```sql
-blog_posts
-├── id              UUID        PK
-├── user_id         UUID        FK → users.id
-├── title           VARCHAR(300)
-├── slug            VARCHAR(300)    UNIQUE per user
-├── excerpt         VARCHAR(500)    -- Preview text
-├── content         TEXT            -- Full Markdown content
-├── cover_image_url TEXT
-├── tags            TEXT[]          -- {"kafka", "system-design"}
-├── read_time_min   SMALLINT        -- Calculated on save
-├── status          VARCHAR(20)  DEFAULT 'draft' -- draft/published
-├── published_at    TIMESTAMPTZ     -- Set when status → published
-├── created_at      TIMESTAMPTZ
-└── updated_at      TIMESTAMPTZ
-
-INDEX: (user_id, status, published_at DESC)
-INDEX: (user_id, slug) UNIQUE
-```
-
-### Education (optional section)
-```sql
-education
-├── id              UUID        PK
-├── user_id         UUID        FK → users.id
-├── institution     VARCHAR(200)
-├── degree          VARCHAR(200)
-├── field           VARCHAR(200)
-├── start_year      SMALLINT
-├── end_year        SMALLINT
-├── description     TEXT
-├── display_order   INTEGER      DEFAULT 0
-├── created_at      TIMESTAMPTZ
-└── updated_at      TIMESTAMPTZ
-```
-
-### Certifications (optional section)
-```sql
-certifications
-├── id              UUID        PK
-├── user_id         UUID        FK → users.id
-├── name            VARCHAR(200)
-├── issuer          VARCHAR(200)
-├── issue_date      DATE
-├── credential_url  TEXT
-├── display_order   INTEGER      DEFAULT 0
-├── created_at      TIMESTAMPTZ
-└── updated_at      TIMESTAMPTZ
-```
-
-### Section Visibility (toggle sections on/off per user)
-```sql
-section_visibility
-├── id              UUID        PK
-├── user_id         UUID        FK → users.id, UNIQUE
-├── show_skills     BOOLEAN     DEFAULT true
-├── show_experience BOOLEAN     DEFAULT true
-├── show_projects   BOOLEAN     DEFAULT true
-├── show_engineering BOOLEAN    DEFAULT true
-├── show_blog       BOOLEAN     DEFAULT true
-├── show_education  BOOLEAN     DEFAULT true
-├── show_certifications BOOLEAN DEFAULT true
-├── show_github     BOOLEAN     DEFAULT true
-├── show_contact    BOOLEAN     DEFAULT true
-├── section_order   JSONB       -- ["hero","skills","projects","experience",...]
-└── updated_at      TIMESTAMPTZ
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         PORTFOLIO PLATFORM                              │
+│                                                                         │
+│  ┌─────────────┐   ┌──────────────┐   ┌──────────────┐                │
+│  │  INGEST      │   │  DATA        │   │  RENDER      │                │
+│  │              │   │              │   │              │                │
+│  │ Manual Admin │   │              │   │ Default      │                │
+│  │ Resume PDF   │──▶│  Neon        │──▶│ Template     │──▶ Portfolio   │
+│  │ LinkedIn PDF │   │  PostgreSQL  │   │              │                │
+│  │ AI Generate  │   │  (Prisma 6)  │   │ AI-Generated │                │
+│  │              │   │              │   │ Templates    │                │
+│  └─────────────┘   └──────────────┘   └──────────────┘                │
+│                            │                   │                        │
+│                     ┌──────┴──────┐    ┌──────┴──────┐                 │
+│                     │ Cloudinary  │    │ GitHub Pages │                 │
+│                     │ (images)    │    │ (publishing) │                 │
+│                     └─────────────┘    └─────────────┘                 │
+│                                                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐  │
+│  │  AI LAYER                                                        │  │
+│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐                │  │
+│  │  │ Resume     │  │ Template   │  │ Portfolio  │                │  │
+│  │  │ Parser     │  │ Generator  │  │ Chatbot    │                │  │
+│  │  │ (Claude)   │  │ (Claude)   │  │ (Groq)     │                │  │
+│  │  └────────────┘  └────────────┘  └────────────┘                │  │
+│  └──────────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 4. API Design
+## 2. Design Decisions
 
-### Public APIs (no auth, cached)
+### Why Next.js App Router (not Pages Router)?
+- Server components reduce client JS bundle
+- API routes colocated with pages
+- Layout system for shared admin sidebar
+- Better streaming/suspense support for AI features later
+
+### Why Prisma 6 (not 7)?
+- Prisma 7 had config issues during initial setup
+- v6 is stable, well-documented, works perfectly with Neon
+- Migration to v7 possible later without schema changes
+
+### Why Neon (not Supabase/PlanetScale)?
+- True serverless PostgreSQL (scales to zero)
+- Free tier: 0.5GB storage, 190 hours compute/month
+- Branch-able databases (useful for staging)
+- Direct PostgreSQL protocol (no proprietary API layer)
+
+### Why NextAuth (not Clerk/Auth0)?
+- Completely free, no user limits
+- GitHub OAuth gives us access_token for future GitHub Pages publishing
+- Session-based (no JWT complexity)
+- Direct database adapter with Prisma
+
+### Why Cloudinary (not S3/Uploadthing)?
+- Generous free tier: 25GB bandwidth, 25K transformations
+- On-the-fly image optimization (resize, format conversion)
+- No AWS account/billing setup needed
+- Direct upload from browser via signed URLs
+
+### Why GitHub Pages for publishing (not Vercel)?
+- Vercel free tier: 1 custom domain per project
+- GitHub Pages: unlimited repos, unlimited custom domains, all free
+- Users already have GitHub accounts (our auth provider)
+- We have their access_token to push via GitHub API
+
+### Why Groq for chatbot (not Claude API)?
+- Groq free tier: generous rate limits
+- Llama 3.3 70B is excellent for conversational AI
+- Near-instant response times (LPU inference)
+- Claude API reserved for higher-value tasks (resume parsing, template gen)
+
+---
+
+## 3. Database Schema Rationale
+
+### Multi-tenancy Model
+Every content table has a `userId` foreign key. This is single-database,
+row-level multi-tenancy. Simple, free, works for thousands of users on
+Neon's 0.5GB limit.
+
 ```
-GET  /api/[slug]                    → User profile + settings
-GET  /api/[slug]/skills             → Skills by category
-GET  /api/[slug]/experience         → Experience (sorted)
-GET  /api/[slug]/projects           → Published projects
-GET  /api/[slug]/projects/[id]      → Single project detail
-GET  /api/[slug]/engineering        → Engineering highlights
-GET  /api/[slug]/blog               → Published blog posts
-GET  /api/[slug]/blog/[postSlug]    → Single blog post
-GET  /api/[slug]/sections           → Section visibility + order
+User has one:  PortfolioSettings, SectionVisibility
+User has many: Skills, Experiences, Projects, EngineeringHighlights,
+               BlogPosts, Education, Certifications
 ```
 
-### Admin APIs (auth required, scoped to logged-in user)
+### Naming Conventions
+- Tables: snake_case plural (`blog_posts`, `engineering_highlights`)
+- Columns: camelCase in Prisma, snake_case in DB via @@map
+- IDs: cuid() — URL-safe, sortable, collision-resistant
+- Timestamps: `createdAt` + `updatedAt` on every content table
+
+### Key Schema Decisions
+
+**PortfolioSettings — single row per user:**
 ```
-── Settings ──
-GET    /api/admin/settings          → Get my portfolio settings
-PUT    /api/admin/settings          → Update settings
+Why not split into multiple config tables?
+→ Portfolio settings are always read together (rendering a portfolio
+  needs title + bio + theme + social links + accent color all at once).
+  Single row = single query. No joins needed.
+```
 
-── Skills ──
-GET    /api/admin/skills
-POST   /api/admin/skills
-PUT    /api/admin/skills/[id]
-DELETE /api/admin/skills/[id]
-PATCH  /api/admin/skills/reorder    → Bulk update display_order
+**SectionVisibility — boolean flags + JSON order:**
+```
+Why not a separate Section table with rows per section?
+→ Sections are a fixed set (skills, projects, blog, etc.). They don't
+  grow dynamically. Boolean flags are simpler to query and update.
+  sectionOrder is JSON because order changes frequently and atomically.
+```
 
-── Experience ──
-GET    /api/admin/experience
-POST   /api/admin/experience
-PUT    /api/admin/experience/[id]
-DELETE /api/admin/experience/[id]
+**Skills — category as string, not separate table:**
+```
+Why not a SkillCategory table with FK?
+→ Skill categories are user-defined and free-form ("Backend", "DevOps",
+  "Languages", etc.). A separate table adds complexity without value.
+  String field with an index on [userId, category] is fast enough.
+```
 
-── Projects ──
-GET    /api/admin/projects
-POST   /api/admin/projects
-PUT    /api/admin/projects/[id]
-DELETE /api/admin/projects/[id]
+**Projects/Engineering — slug field:**
+```
+Why slugs?
+→ Clean URLs: /kousik/projects/migration-utility
+  Auto-generated from title, unique per user.
+  @@unique([userId, slug]) prevents collisions.
+```
 
-── Engineering ──
-GET    /api/admin/engineering
-POST   /api/admin/engineering
-PUT    /api/admin/engineering/[id]
-DELETE /api/admin/engineering/[id]
+**BlogPosts — readTimeMin auto-calculated:**
+```
+Why store it instead of computing on read?
+→ Computed server-side on create/update (~200 words/min formula).
+  Stored to avoid recomputation on every page view.
+  Trivial storage cost vs repeated string splitting.
+```
 
-── Blog ──
-GET    /api/admin/blog
-POST   /api/admin/blog
-PUT    /api/admin/blog/[id]
-DELETE /api/admin/blog/[id]
-PATCH  /api/admin/blog/[id]/publish
+**Experience — startDate/endDate as DateTime @db.Date:**
+```
+Why Date and not String?
+→ Enables sorting by date, range queries, date formatting.
+  Education uses Int (startYear/endYear) because education
+  dates are typically year-granularity only.
+```
 
-── Sections ──
-PUT    /api/admin/sections          → Toggle visibility + reorder
+### Indexes
+```sql
+-- Every content table indexed by userId + display order
+@@index([userId, displayOrder])        -- skills, experiences, projects, etc.
+@@index([userId, isFeatured, displayOrder])  -- projects, engineering
+@@index([userId, status])              -- blog_posts
+@@unique([userId, slug])               -- projects, engineering, blog_posts
+```
 
-── Upload ──
-POST   /api/admin/upload            → Upload image to Cloudinary
+### Future Table: CustomTemplate
+```prisma
+model CustomTemplate {
+  id        String  @id @default(cuid())
+  userId    String
+  name      String                    // "My Dark Terminal Theme"
+  html      String  @db.Text          // Complete HTML+CSS with {{placeholders}}
+  thumbnail String? @db.Text          // Auto-generated preview screenshot
+  isActive  Boolean @default(false)   // Only one active per user
+  source    String? @db.VarChar(20)   // "ai-prompt" | "url-import" | "manual"
+  sourceUrl String? @db.Text          // Original URL if imported
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive])
+  @@map("custom_templates")
+}
 ```
 
 ---
 
-## 5. Application Architecture
+## 4. Authentication Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    NEXT.JS APP                       │
-│                                                     │
-│  ┌──────────────┐          ┌──────────────────┐     │
-│  │ Public Pages │          │  Admin Dashboard  │     │
-│  │              │          │  (Auth Protected) │     │
-│  │ /[slug]      │          │  /admin           │     │
-│  │ /[slug]/blog │          │  /admin/projects  │     │
-│  │ /[slug]/...  │          │  /admin/blog      │     │
-│  └──────┬───────┘          └────────┬──────────┘     │
-│         │                           │                │
-│         ▼                           ▼                │
-│  ┌─────────────────────────────────────────────┐     │
-│  │          API Route Handlers                  │     │
-│  │          /api/[slug]/*  (public)             │     │
-│  │          /api/admin/*   (protected)          │     │
-│  └──────────────────┬──────────────────────────┘     │
-│                     │                                │
-│  ┌──────────────────▼──────────────────────────┐     │
-│  │            Prisma ORM Layer                  │     │
-│  │      (Type-safe queries, scoped by userId)   │     │
-│  └──────────────────┬──────────────────────────┘     │
-│                     │                                │
-│  ┌──────────────────▼──────┐  ┌────────────────┐     │
-│  │   NextAuth.js Session   │  │  Cloudinary SDK │     │
-│  │   (GitHub OAuth)        │  │  (Image Upload) │     │
-│  └─────────────────────────┘  └────────────────┘     │
-└─────────────────────┬───────────────────────────────┘
-                      │
-          ┌───────────▼───────────┐
-          │   Neon PostgreSQL     │
-          │   (Free Tier)         │
-          │                       │
-          │   users               │
-          │   portfolio_settings  │
-          │   skills              │
-          │   experiences         │
-          │   projects            │
-          │   engineering_...     │
-          │   blog_posts          │
-          │   education           │
-          │   certifications      │
-          │   section_visibility  │
-          └───────────────────────┘
+┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
+│  Browser  │────▶│ NextAuth │────▶│  GitHub  │────▶│  Callback│
+│  Sign In  │     │ /api/auth│     │  OAuth   │     │  Create  │
+│  Button   │     │          │     │  Consent │     │  User +  │
+│           │◀────│          │◀────│          │◀────│  Account │
+│  Cookie   │     │ Set      │     │ Return   │     │  in DB   │
+│  Set      │     │ Session  │     │ Token    │     │          │
+└──────────┘     └──────────┘     └──────────┘     └──────────┘
+```
+
+**What we store from GitHub OAuth:**
+```
+Account table:
+  - access_token   → used later for GitHub Pages publishing
+  - provider       → "github"
+  - providerAccountId → GitHub user ID
+
+User table:
+  - name           → GitHub display name
+  - email          → GitHub email
+  - image          → GitHub avatar URL
+  - githubUsername  → extracted for repo naming
+  - slug           → derived from name (URL path)
+```
+
+**Route protection pattern:**
+```tsx
+// Every API route:
+const session = await getServerSession(authOptions);
+if (!session?.user?.id) return NextResponse.json(
+  { error: "Unauthorized" }, { status: 401 }
+);
+// Then use session.user.id for all DB queries
+
+// Admin pages: middleware or layout-level redirect
 ```
 
 ---
 
-## 6. Folder Structure
+## 5. API Design Patterns
 
+### Consistent CRUD Pattern
+Every admin resource follows the same pattern:
+
+```tsx
+// GET    → list all for current user (sorted by displayOrder or date)
+// POST   → create new (auto-increment displayOrder)
+// PUT    → update by id (verify userId ownership)
+// DELETE → delete by id via query param (?id=xxx)
 ```
-portfolio-platform/
-│
-├── prisma/
-│   ├── schema.prisma           # Full database schema
-│   └── seed.ts                 # Seed data for dev
-│
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx          # Root layout
-│   │   ├── page.tsx            # Landing / redirect
-│   │   │
-│   │   ├── [slug]/             # ── PUBLIC PORTFOLIO ──
-│   │   │   ├── page.tsx        # Full portfolio homepage
-│   │   │   ├── blog/
-│   │   │   │   ├── page.tsx    # Blog listing
-│   │   │   │   └── [postSlug]/
-│   │   │   │       └── page.tsx
-│   │   │   └── projects/
-│   │   │       └── [projectSlug]/
-│   │   │           └── page.tsx
-│   │   │
-│   │   ├── admin/              # ── ADMIN DASHBOARD ──
-│   │   │   ├── layout.tsx      # Auth guard + sidebar
-│   │   │   ├── page.tsx        # Dashboard overview
-│   │   │   ├── settings/
-│   │   │   │   └── page.tsx    # Edit profile, social, theme
-│   │   │   ├── projects/
-│   │   │   │   ├── page.tsx    # List + add/edit projects
-│   │   │   │   └── [id]/
-│   │   │   │       └── page.tsx
-│   │   │   ├── experience/
-│   │   │   │   └── page.tsx
-│   │   │   ├── skills/
-│   │   │   │   └── page.tsx
-│   │   │   ├── engineering/
-│   │   │   │   └── page.tsx
-│   │   │   ├── blog/
-│   │   │   │   ├── page.tsx
-│   │   │   │   └── [id]/
-│   │   │   │       └── page.tsx  # Markdown editor
-│   │   │   ├── education/
-│   │   │   │   └── page.tsx
-│   │   │   └── sections/
-│   │   │       └── page.tsx    # Toggle & reorder sections
-│   │   │
-│   │   └── api/
-│   │       ├── auth/
-│   │       │   └── [...nextauth]/
-│   │       │       └── route.ts
-│   │       ├── [slug]/         # Public API routes
-│   │       │   ├── route.ts
-│   │       │   ├── skills/route.ts
-│   │       │   ├── experience/route.ts
-│   │       │   ├── projects/route.ts
-│   │       │   ├── engineering/route.ts
-│   │       │   └── blog/route.ts
-│   │       └── admin/          # Protected API routes
-│   │           ├── settings/route.ts
-│   │           ├── skills/route.ts
-│   │           ├── experience/route.ts
-│   │           ├── projects/route.ts
-│   │           ├── engineering/route.ts
-│   │           ├── blog/route.ts
-│   │           ├── sections/route.ts
-│   │           └── upload/route.ts
-│   │
-│   ├── components/
-│   │   ├── public/             # Portfolio display components
-│   │   │   ├── Navbar.tsx
-│   │   │   ├── Hero.tsx
-│   │   │   ├── SkillsGrid.tsx
-│   │   │   ├── ProjectCard.tsx
-│   │   │   ├── ExperienceTimeline.tsx
-│   │   │   ├── EngineeringCard.tsx
-│   │   │   ├── BlogCard.tsx
-│   │   │   ├── TerminalSection.tsx
-│   │   │   ├── GithubActivity.tsx
-│   │   │   ├── ContactSection.tsx
-│   │   │   └── Footer.tsx
-│   │   │
-│   │   ├── admin/              # Dashboard components
-│   │   │   ├── Sidebar.tsx
-│   │   │   ├── DashboardHeader.tsx
-│   │   │   ├── DataTable.tsx
-│   │   │   ├── FormModal.tsx
-│   │   │   ├── MarkdownEditor.tsx
-│   │   │   ├── ImageUploader.tsx
-│   │   │   ├── TagInput.tsx
-│   │   │   ├── SectionReorder.tsx
-│   │   │   └── StatsCard.tsx
-│   │   │
-│   │   └── ui/                 # Shared UI primitives
-│   │       ├── Button.tsx
-│   │       ├── Input.tsx
-│   │       ├── Modal.tsx
-│   │       ├── Card.tsx
-│   │       ├── Badge.tsx
-│   │       └── Toast.tsx
-│   │
-│   ├── lib/
-│   │   ├── prisma.ts           # Prisma client singleton
-│   │   ├── auth.ts             # NextAuth config
-│   │   ├── cloudinary.ts       # Upload helper
-│   │   ├── github.ts           # GitHub API integration
-│   │   └── utils.ts            # Shared utilities
-│   │
-│   └── types/
-│       └── index.ts            # Shared TypeScript types
-│
-├── public/
-│   └── default-avatar.png
-│
-├── .env.example
-├── next.config.ts
-├── tailwind.config.ts
-├── tsconfig.json
-├── package.json
-└── README.md
+
+### Ownership Verification
+Every write operation includes `userId` in the WHERE clause:
+```tsx
+await prisma.project.update({
+  where: { id, userId: session.user.id },  // ALWAYS include userId
+  data,
+});
+```
+This prevents users from modifying other users' data even if they
+guess a valid ID.
+
+### Slug Generation
+Auto-generated on create and title-change:
+```tsx
+const slug = title
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, "-")
+  .replace(/^-|-$/g, "");
+```
+
+### Error Handling Pattern
+```tsx
+try {
+  const result = await prisma.xxx.create({ data });
+  return NextResponse.json(result);
+} catch (error) {
+  if (error.code === "P2002") {
+    return NextResponse.json(
+      { error: "Duplicate entry" }, { status: 409 }
+    );
+  }
+  return NextResponse.json(
+    { error: "Internal server error" }, { status: 500 }
+  );
+}
 ```
 
 ---
 
-## 7. Development Roadmap
+## 6. Image Upload Architecture
 
-### Phase 1: Foundation (Week 1)
 ```
-□ Initialize Next.js project with TypeScript + Tailwind
-□ Set up Prisma with Neon PostgreSQL
-□ Create full database schema + run migrations
-□ Configure NextAuth.js with GitHub OAuth
-□ Build Prisma client singleton + utility helpers
-□ Create seed script with sample data
-□ Verify: Can login, DB connected, seed data visible
-```
-
-### Phase 2: Admin Dashboard — Core (Week 2)
-```
-□ Admin layout (sidebar, header, auth guard)
-□ Settings page (edit name, bio, social, theme)
-□ Skills CRUD (add/edit/delete/reorder by category)
-□ Experience CRUD (add/edit/delete with date ranges)
-□ Image upload integration with Cloudinary
-□ Verify: Can manage all basic content via admin
+Browser                    Server                     Cloudinary
+┌──────┐                  ┌──────┐                   ┌──────────┐
+│Drag/ │  FormData POST   │/api/ │  upload_stream()  │          │
+│Drop  │────────────────▶ │upload│──────────────────▶ │ portfolio│
+│Image │                  │      │                    │ /projects│
+│      │  { url, id,      │      │  { secure_url,    │ /blog    │
+│      │◀──width, height}─│      │◀───public_id }────│ /general │
+└──────┘                  └──────┘                   └──────────┘
 ```
 
-### Phase 3: Admin Dashboard — Content (Week 3)
+**Folder structure in Cloudinary:**
 ```
-□ Projects CRUD (with tech stack tags, screenshots)
-□ Engineering Highlights CRUD
-□ Blog post editor with Markdown preview
-□ Blog publish/draft workflow
-□ Section visibility toggles + drag-to-reorder
-□ Education + Certifications CRUD
-□ Verify: All content types manageable, sections toggleable
-```
-
-### Phase 4: Public Portfolio — UI (Week 4)
-```
-□ Dynamic route /[slug] — resolve user, fetch all data
-□ Hero section (name, tagline, avatar, social links)
-□ Skills grid (grouped by category)
-□ Experience timeline
-□ Featured projects showcase
-□ Engineering highlights section
-□ Blog listing + individual post pages
-□ Contact section
-□ Responsive design for all sections
-□ Verify: Full portfolio renders from DB data
-```
-
-### Phase 5: Polish + Advanced (Week 5)
-```
-□ Framer Motion animations (scroll reveals, hovers)
-□ Terminal/interactive section
-□ GitHub activity integration (recent repos, commits)
-□ SEO: dynamic meta tags, Open Graph per page
-□ Theme support (dark/light based on user setting)
-□ Loading states + error boundaries
-□ Performance: image optimization, caching headers
-□ Verify: Smooth, fast, SEO-friendly portfolio
-```
-
-### Phase 6: Deploy + Domain (Week 6)
-```
-□ Deploy to Vercel / Cloudflare Pages
-□ Set environment variables in dashboard
-□ Register kousik.is-a.dev (submit PR to is-a-dev)
-□ Configure custom domain in hosting platform
-□ Enable HTTPS
-□ Test full flow: login → edit → view public portfolio
-□ README documentation
-□ Verify: Live at kousik.is-a.dev, fully functional
+portfolio/
+├── projects/     ← project thumbnails
+├── engineering/  ← architecture diagrams
+├── blog/         ← cover images
+├── education/    ← institution logos (if added later)
+└── general/      ← profile images, misc
 ```
 
 ---
 
-## 8. Free Tier Limits (What You Get)
+## 7. Template System Architecture
 
-| Service        | Free Tier                          | Enough? |
-|----------------|-------------------------------------|---------|
-| Vercel         | 100GB bandwidth, 100 deploys/day   | Yes     |
-| Neon Postgres  | 0.5GB storage, auto-suspend        | Yes     |
-| Cloudinary     | 25GB bandwidth, 25K transforms/mo  | Yes     |
-| NextAuth       | Open source, unlimited             | Yes     |
-| is-a.dev       | Free forever                       | Yes     |
-| GitHub OAuth   | Free, unlimited                    | Yes     |
-| **Total Cost** | **₹0/month**                       |         |
+### The Contract (PortfolioData interface)
+```typescript
+// Every template receives this exact shape
+interface PortfolioData {
+  user: {
+    name: string;
+    image: string | null;
+    slug: string;
+    githubUsername: string | null;
+  };
+  settings: {
+    siteTitle: string | null;
+    tagline: string | null;
+    bio: string | null;
+    heroImageUrl: string | null;
+    resumeUrl: string | null;
+    location: string | null;
+    availableForHire: boolean;
+    socialLinks: {
+      github?: string;
+      linkedin?: string;
+      twitter?: string;
+      email?: string;
+    } | null;
+    theme: string;
+    accentColor: string;
+  };
+  skills: Array<{
+    id: string;
+    category: string;
+    name: string;
+    proficiency: number | null;
+  }>;
+  experiences: Array<{
+    id: string;
+    company: string;
+    role: string;
+    description: string | null;
+    companyLogoUrl: string | null;
+    location: string | null;
+    startDate: string;
+    endDate: string | null;
+    isCurrent: boolean;
+    techStack: string[];
+  }>;
+  projects: Array<{
+    id: string;
+    title: string;
+    slug: string;
+    description: string | null;
+    longDescription: string | null;
+    techStack: string[];
+    githubUrl: string | null;
+    liveUrl: string | null;
+    thumbnailUrl: string | null;
+    category: string | null;
+    isFeatured: boolean;
+  }>;
+  engineering: Array<{
+    id: string;
+    title: string;
+    summary: string | null;
+    content: string | null;
+    techStack: string[];
+    diagramUrl: string | null;
+    impact: string | null;
+    isFeatured: boolean;
+  }>;
+  blogPosts: Array<{
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    content: string | null;
+    coverImageUrl: string | null;
+    tags: string[];
+    readTimeMin: number | null;
+    publishedAt: string | null;
+  }>;
+  education: Array<{
+    id: string;
+    institution: string;
+    degree: string | null;
+    field: string | null;
+    startYear: number | null;
+    endYear: number | null;
+    description: string | null;
+  }>;
+  certifications: Array<{
+    id: string;
+    name: string;
+    issuer: string | null;
+    issueDate: string | null;
+    credentialUrl: string | null;
+  }>;
+  sections: {
+    showSkills: boolean;
+    showExperience: boolean;
+    showProjects: boolean;
+    showEngineering: boolean;
+    showBlog: boolean;
+    showEducation: boolean;
+    showCertifications: boolean;
+    showGithub: boolean;
+    showContact: boolean;
+    sectionOrder: string[];
+  };
+}
+```
+
+### Template Types
+
+```
+A) Built-in default:     src/templates/default/
+                          → React components, part of the codebase
+                          → Always available as fallback
+
+B) AI-generated custom:   Stored in custom_templates table
+                          → HTML + CSS string with {{placeholders}}
+                          → Rendered server-side with data injection
+                          → Sandboxed for security
+```
+
+### Placeholder Syntax for AI Templates
+```
+Simple values:     {{name}}, {{tagline}}, {{bio}}
+Loops:             {{#projects}} ... {{/projects}}
+Conditionals:      {{?showBlog}} ... {{/showBlog}}
+Nested in loops:   {{#projects}} <h3>{{title}}</h3> {{/projects}}
+```
+
+### Template Rendering Pipeline
+```
+1. Fetch user data from Prisma → PortfolioData object
+2. Check for active CustomTemplate
+   → If found: server-side placeholder replacement → serve HTML
+   → If not: render default React template
+3. For static export (GitHub Pages):
+   → Same pipeline but output is saved to file instead of streamed
+```
 
 ---
 
-## 9. Portability & Migration Guide
+## 8. AI Features Architecture
 
-### Moving Database off Neon
-```bash
-# Export from Neon (standard pg_dump)
-pg_dump "postgresql://user:pass@neon-host/db?sslmode=require" > backup.sql
+### Resume Parser Pipeline
+```
+PDF Upload → pdf-parse (extract text) → Claude API prompt:
 
-# Import to any PostgreSQL (AWS RDS, GCP Cloud SQL, self-hosted)
-psql "postgresql://user:pass@new-host/db" < backup.sql
+"You are a resume parser. Extract structured data from this resume text.
+Return ONLY valid JSON matching this exact schema:
+{
+  settings: { siteTitle, tagline, bio },
+  skills: [{ category, name, proficiency }],
+  experiences: [{ company, role, startDate, endDate, description, techStack }],
+  education: [{ institution, degree, field, startYear, endYear }],
+  certifications: [{ name, issuer, issueDate }],
+  projects: [{ title, description, techStack, liveUrl, githubUrl }]
+}
 
-# Update one env variable — zero code changes
-DATABASE_URL="postgresql://user:pass@new-host/db"
+Rules:
+- proficiency: estimate 1-100 based on context clues
+- techStack: extract from descriptions, not just listed skills
+- dates: ISO format for experiences, year integers for education
+- bio: write a concise, professional summary (2-3 sentences)
+- tagline: create from job title + specialization
 
-# Re-run Prisma to verify
-npx prisma db pull
+Resume text:
+---
+{extractedText}
+---"
+
+→ Parse JSON response → Validate → Bulk upsert to Prisma
 ```
 
-### Moving Hosting off Vercel
+### AI Template Generator Pipeline
 ```
-Option A: AWS Amplify     → Connect GitHub repo, auto-detects Next.js
-Option B: AWS EC2 / GCP   → Docker container with `next build && next start`
-Option C: Any VPS          → Node.js 18+ and `npm run start`
-Option D: Cloudflare Pages → @cloudflare/next-on-pages adapter
+User input (URL or description)
+         ↓
+If URL: fetch page HTML+CSS via web_fetch
+         ↓
+Claude API prompt:
 
-Steps:
-1. Set environment variables on new host
-2. Connect GitHub repo or push Docker image
-3. Update DNS CNAME for kousik.is-a.dev
-4. Done — no code changes needed
+"Convert this design into a standalone HTML+CSS template.
+Use this placeholder syntax:
+- {{name}}, {{tagline}}, {{bio}} for simple values
+- {{#projects}} ... {{/projects}} for loops
+- {{title}}, {{description}} inside loops
+
+The template must:
+1. Be a single HTML file with embedded <style>
+2. Be fully responsive (mobile-first)
+3. Replace ALL hardcoded content with placeholders
+4. Keep the original visual design as close as possible
+5. Use only CSS (no JavaScript required)
+6. Include sections for: hero, skills, experience, projects,
+   engineering, blog, education, certifications, contact
+
+Return ONLY the HTML. No explanation."
+
+→ Store result in custom_templates table
+→ Generate thumbnail screenshot (optional: Puppeteer on serverless)
+→ User previews and activates
 ```
 
-### Moving Images off Cloudinary
+### Chatbot Architecture
 ```
-Image URLs stored as plain TEXT in database.
-Switch upload utility to AWS S3 / GCP Storage / any CDN.
-Existing URLs keep working (Cloudinary doesn't delete on free tier).
-Optionally: bulk-migrate URLs with a simple script.
-```
-
-### Auth (NextAuth) — Fully Portable
-```
-Sessions stored in YOUR PostgreSQL (Prisma adapter).
-Moving hosts = just set NEXTAUTH_URL to new domain.
-GitHub OAuth: update callback URL in GitHub app settings.
-No data migration needed — it's all in your DB already.
+Visitor sends message
+         ↓
+POST /api/chat { userId, message }
+         ↓
+Fetch portfolio data for that userId
+         ↓
+Check cache for similar questions (fuzzy match)
+         ↓
+If cache hit: return cached answer
+If cache miss:
+         ↓
+Groq API (Llama 3.3 70B):
+  System: "You are {name}'s portfolio assistant.
+           Answer questions about them based ONLY on this data:
+           {JSON.stringify(portfolioData)}.
+           Be concise (2-3 sentences max).
+           If the data doesn't contain the answer, say so."
+  User: "{visitor's question}"
+         ↓
+Stream response back to client
+Cache the Q&A pair for 24 hours
 ```
 
 ---
 
-## 10. Future Enhancements (Post-Launch)
+## 9. Publishing Pipeline (GitHub Pages)
 
 ```
-□ Visitor analytics dashboard (simple hit counter via DB)
-□ Multiple theme templates users can pick from
-□ PDF resume auto-generation from experience data
-□ Custom CSS injection per user
-□ API rate limiting for public endpoints
-□ Blog comments (via GitHub Discussions or Giscus)
-□ Newsletter signup integration
-□ Buy kousik.dev → point to same deployment
-□ Spring Boot version of backend (separate showcase repo)
+User clicks "Publish" in admin
+         ↓
+POST /api/publish
+         ↓
+1. Fetch complete PortfolioData
+2. Fetch active template (custom or default)
+3. Render to standalone HTML string
+4. Get user's GitHub access_token from accounts table
+5. GitHub API calls:
+   a. Create/get repo: {username}.github.io
+   b. Create/update files:
+      - index.html (the rendered portfolio)
+      - CNAME (custom domain if set)
+      - robots.txt
+      - sitemap.xml (auto-generated)
+   c. Enable GitHub Pages (if not already)
+6. Return published URL
+         ↓
+Portfolio live at:
+  https://{username}.github.io
+  or https://custom-domain.com (if CNAME set)
 ```
+
+**GitHub API calls used:**
+```
+PUT /repos/{owner}/{repo}/contents/{path}
+  → Create or update files
+
+POST /repos/{owner}/{repo}/pages
+  → Enable GitHub Pages
+
+GET /repos/{owner}/{repo}/pages
+  → Check deployment status
+```
+
+---
+
+## 10. Free Tier Limits & Monitoring
+
+| Service     | Free Limit              | Our Usage (est.)         | Headroom |
+|-------------|-------------------------|--------------------------|----------|
+| Vercel      | 100GB bandwidth/mo      | ~5GB for 1000 users      | 95%      |
+| Neon        | 0.5GB storage           | ~50MB for 1000 users     | 90%      |
+| Neon        | 190 compute hours/mo    | ~20 hours typical        | 89%      |
+| Cloudinary  | 25GB bandwidth/mo       | ~2GB for 1000 users      | 92%      |
+| Cloudinary  | 25K transformations/mo  | ~5K typical               | 80%      |
+| Groq        | 14.4K requests/day      | ~500/day at 1000 users   | 96%      |
+| GitHub Pages| Unlimited repos         | 1 per user               | ∞        |
+
+**When to worry:**
+- 5000+ active users: Neon storage approaches limit
+- 10000+ monthly visitors per portfolio: Cloudinary bandwidth
+- Viral chatbot usage: Groq rate limits
+
+**Scaling path (when free tier isn't enough):**
+- Neon: $19/mo for 10GB
+- Vercel: $20/mo Pro
+- Cloudinary: $89/mo Plus
+- Or self-host on a $5/mo VPS with Docker
