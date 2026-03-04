@@ -1,6 +1,8 @@
 
+import Link from "next/link";
 import type { PortfolioData } from "@/templates/types";
 import SectionTitle from "@/templates/default/components/SectionTitle";
+
 export default function BlogSection({ data }: { data: PortfolioData }) {
   const fmt = (d: string) => new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
@@ -9,10 +11,14 @@ export default function BlogSection({ data }: { data: PortfolioData }) {
       <SectionTitle title="Blog" accent={data.settings.accentColor} />
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-10">
         {data.blogPosts.map((post) => (
-          <article key={post.id} className="bg-[#121826] border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-colors">
+          <Link
+            key={post.id}
+            href={`/${data.user.slug}/blog/${post.slug}`}
+            className="group bg-[#121826] border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-colors block"
+          >
             {post.coverImageUrl && (
-              <div className="h-40 relative">
-                <img src={post.coverImageUrl} alt={post.title} className="w-full h-full object-cover" />
+              <div className="h-40">
+                <img src={post.coverImageUrl} alt={post.title} className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300" />
               </div>
             )}
             <div className="p-5">
@@ -20,15 +26,18 @@ export default function BlogSection({ data }: { data: PortfolioData }) {
                 {post.publishedAt && <span>{fmt(post.publishedAt)}</span>}
                 {post.readTimeMin && <span>· {post.readTimeMin} min read</span>}
               </div>
-              <h3 className="text-white font-semibold mb-2 line-clamp-2">{post.title}</h3>
+              <h3 className="text-white font-semibold mb-2 line-clamp-2 group-hover:text-white/90">{post.title}</h3>
               {post.excerpt && <p className="text-gray-400 text-sm line-clamp-3 mb-3">{post.excerpt}</p>}
-              <div className="flex gap-1.5 flex-wrap">
-                {post.tags.slice(0, 3).map((t) => (
-                  <span key={t} className="text-xs bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded">{t}</span>
-                ))}
+              <div className="flex items-center justify-between mt-auto">
+                <div className="flex gap-1.5 flex-wrap">
+                  {post.tags.slice(0, 3).map((t) => (
+                    <span key={t} className="text-xs bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded">{t}</span>
+                  ))}
+                </div>
+                <span className="text-xs flex-shrink-0 ml-2" style={{ color: data.settings.accentColor }}>Read →</span>
               </div>
             </div>
-          </article>
+          </Link>
         ))}
       </div>
     </section>

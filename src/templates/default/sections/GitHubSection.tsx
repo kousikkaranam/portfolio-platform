@@ -61,6 +61,37 @@ function extractGitHubUsername(input: string): string | null {
   return null;
 }
 
+// Returns true only if the URL is a public github.com profile
+function isPublicGitHub(url: string): boolean {
+  return /^https?:\/\/(www\.)?github\.com\/[^/?#]+\/?$/.test(url.trim());
+}
+
+// For internal/non-github URLs — just show a link card, no chart
+function InternalBlock({ label, profileUrl, accent }: { label: string; profileUrl: string; accent: string }) {
+  const host = (() => { try { return new URL(profileUrl).hostname; } catch { return profileUrl; } })();
+  return (
+    <div className="bg-[#121826] border border-gray-800 rounded-xl p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs text-gray-500 uppercase tracking-widest mb-0.5">{label}</p>
+          <p className="text-sm text-gray-400">{host}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-gray-600 bg-gray-800 px-2 py-1 rounded">Internal</span>
+          <a href={profileUrl} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-gray-700 px-3 py-1.5 rounded-lg transition-colors hover:border-gray-600">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+            View profile
+          </a>
+        </div>
+      </div>
+      <p className="text-xs text-gray-600 mt-4">Contribution data is not publicly available for internal repositories.</p>
+    </div>
+  );
+}
+
 function RepoCards({ repos, accent }: { repos: GitHubRepo[]; accent: string }) {
   if (repos.length === 0) return null;
   return (
@@ -175,25 +206,29 @@ export default async function GitHubSection({ data }: { data: PortfolioData }) {
   const rawPersonal = data.settings.socialLinks?.github || data.user.githubUsername || "";
   const personalUsername = extractGitHubUsername(rawPersonal);
 
-  // Work GitHub accounts from experiences that have a githubUrl
-  const workAccounts = data.experiences
+  // Work accounts from experiences — split into public (github.com) and internal
+  const rawWorkAccounts = data.experiences
     .filter((ex) => !!ex.githubUrl)
     .map((ex) => ({
       company: ex.company,
-      username: extractGitHubUsername(ex.githubUrl!),
       profileUrl: ex.githubUrl!,
+      isPublic: isPublicGitHub(ex.githubUrl!),
+      username: extractGitHubUsername(ex.githubUrl!),
     }))
-    .filter((w): w is { company: string; username: string; profileUrl: string } => !!w.username)
-    // deduplicate by username
-    .filter((w, i, arr) => arr.findIndex((x) => x.username === w.username) === i);
+    .filter((w, i, arr) => arr.findIndex((x) => x.profileUrl === w.profileUrl) === i); // dedupe by URL
 
-  // Nothing to show
-  if (!personalUsername && workAccounts.length === 0) return null;
+  const publicWorkAccounts = rawWorkAccounts
+    .filter((w): w is typeof w & { username: string } => w.isPublic && !!w.username);
 
-  // Fetch repos in parallel
+  const internalWorkAccounts = rawWorkAccounts.filter((w) => !w.isPublic);
+
+  // Nothing to show at all
+  if (!personalUsername && rawWorkAccounts.length === 0) return null;
+
+  // Fetch repos in parallel (only for public github.com accounts)
   const [personalRepos, ...workRepos] = await Promise.all([
     personalUsername ? fetchTopRepos(personalUsername) : Promise.resolve([]),
-    ...workAccounts.map((w) => fetchTopRepos(w.username)),
+    ...publicWorkAccounts.map((w) => fetchTopRepos(w.username)),
   ]);
 
   return (
@@ -212,15 +247,25 @@ export default async function GitHubSection({ data }: { data: PortfolioData }) {
           />
         )}
 
-        {/* Work accounts */}
-        {workAccounts.map((w, i) => (
+        {/* Public work accounts — show chart + repos */}
+        {publicWorkAccounts.map((w, i) => (
           <ContributionBlock
-            key={w.username}
+            key={w.profileUrl}
             username={w.username}
             label={`Work · ${w.company}`}
             profileUrl={w.profileUrl}
             accent={accent}
             repos={workRepos[i] ?? []}
+          />
+        ))}
+
+        {/* Internal work accounts — show profile link only, no chart */}
+        {internalWorkAccounts.map((w) => (
+          <InternalBlock
+            key={w.profileUrl}
+            label={`Work · ${w.company}`}
+            profileUrl={w.profileUrl}
+            accent={accent}
           />
         ))}
       </div>
