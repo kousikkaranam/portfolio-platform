@@ -45,6 +45,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [slug, setSlug] = useState("");
   const [name, setName] = useState("");
+  const [customDomain, setCustomDomain] = useState("");
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -89,6 +90,7 @@ export default function SettingsPage() {
         if (data.user) {
           setSlug(data.user.slug ?? "");
           setName(data.user.name ?? "");
+          setCustomDomain(data.user.customDomain ?? "");
         }
         setLoading(false);
       });
@@ -99,7 +101,7 @@ export default function SettingsPage() {
     await fetch("/api/admin/settings", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...settings, slug, name }),
+      body: JSON.stringify({ ...settings, slug, name, customDomain: customDomain || null }),
     });
     setSaving(false);
     setSaved(true);
@@ -351,6 +353,21 @@ export default function SettingsPage() {
                 />
                 <p className="text-xs text-gray-500 mt-1">yoursite.com/{slug}</p>
               </div>
+            </div>
+
+            {/* Custom Domain */}
+            <div>
+              <label className="block text-sm text-gray-400 mb-1.5">Custom Domain <span className="text-gray-600">(optional)</span></label>
+              <input
+                type="text"
+                value={customDomain}
+                onChange={(e) => setCustomDomain(e.target.value.toLowerCase().replace(/[^a-z0-9.-]/g, ""))}
+                placeholder="vedansh.is-a.dev"
+                className="w-full bg-[#0b0f19] border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#5eead4] transition-colors placeholder:text-gray-600"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Point your domain&apos;s CNAME to your Vercel deployment, then enter it here. Your portfolio will be served at the root of this domain.
+              </p>
             </div>
             <div>
               <label className="block text-sm text-gray-400 mb-1.5">Site Title</label>

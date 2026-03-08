@@ -15,7 +15,7 @@ export async function GET() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { slug: true, name: true, image: true },
+    select: { slug: true, name: true, image: true, customDomain: true },
   });
 
   return NextResponse.json({ settings, user });
@@ -29,13 +29,14 @@ export async function PUT(request: Request) {
 
   const body = await request.json();
 
-  // Update user slug/name if provided
-  if (body.slug || body.name) {
+  // Update user slug/name/customDomain if provided
+  if (body.slug || body.name || body.customDomain !== undefined) {
     await prisma.user.update({
       where: { id: session.user.id },
       data: {
         ...(body.slug && { slug: body.slug }),
         ...(body.name && { name: body.name }),
+        ...(body.customDomain !== undefined && { customDomain: body.customDomain }),
       },
     });
   }

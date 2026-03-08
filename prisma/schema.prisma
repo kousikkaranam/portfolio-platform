@@ -17,6 +17,7 @@ model User {
   emailVerified DateTime?
   image         String?
   slug          String?   @unique
+  customDomain  String?   @unique
   githubUsername String?
 
   createdAt DateTime @default(now())
