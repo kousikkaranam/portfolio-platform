@@ -2,11 +2,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
 export default async function Home() {
-  // If an owner slug is set via env, redirect straight to their portfolio
-  const ownerSlug = process.env.PORTFOLIO_OWNER_SLUG;
-  if (ownerSlug) {
-    redirect(`/${ownerSlug}`);
-  }
+  // If PORTFOLIO_OWNER_SLUG is set, the rewrite in next.config.ts
+  // serves the portfolio at "/" — this page won't be reached in that case.
 
   // Fallback: redirect to the first registered user's portfolio
   const firstUser = await prisma.user.findFirst({
