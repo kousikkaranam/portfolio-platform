@@ -357,3 +357,20 @@ model CustomSection {
   @@index([userId, displayOrder])
   @@map("custom_sections")
 }
+
+// ─── Registration Requests ──────────────────────────────
+
+model RegistrationRequest {
+  id             String   @id @default(cuid())
+  email          String
+  name           String?
+  githubUsername  String?
+  image          String?
+  status         String   @default("pending") // pending | approved | rejected
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([email, status])
+  @@map("registration_requests")
+}

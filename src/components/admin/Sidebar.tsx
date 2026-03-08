@@ -20,7 +20,10 @@ import {
   LayoutTemplate,
   SquarePen,
   FileText,
+  UserPlus,
 } from "lucide-react";
+
+const OWNER_SLUG = process.env.NEXT_PUBLIC_OWNER_SLUG;
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -37,6 +40,10 @@ const navItems = [
   { href: "/admin/certifications", label: "Certifications", icon: Award },
   { href: "/admin/sections", label: "Sections", icon: Layers },
   { href: "/admin/custom-sections", label: "Custom Sections", icon: SquarePen },
+];
+
+const ownerOnlyItems = [
+  { href: "/admin/registrations", label: "Registrations", icon: UserPlus },
 ];
 
 export default function Sidebar() {
@@ -76,6 +83,33 @@ export default function Sidebar() {
             </Link>
           );
         })}
+
+        {/* Owner-only items */}
+        {OWNER_SLUG && session?.user?.slug === OWNER_SLUG && (
+          <>
+            <div className="pt-3 mt-3 border-t border-gray-800">
+              <p className="px-3 text-[10px] uppercase tracking-wider text-gray-600 mb-2">Platform</p>
+            </div>
+            {ownerOnlyItems.map((item) => {
+              const isActive = pathname.startsWith(item.href);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive
+                      ? "bg-[#5eead4]/10 text-[#5eead4]"
+                      : "text-gray-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <Icon size={18} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </>
+        )}
       </nav>
 
       {/* Footer */}

@@ -22,6 +22,44 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user, profile }) {
+      // If registration is closed, only allow existing users
+      if (process.env.REGISTRATION_OPEN === "false") {
+        const existing = await prisma.user.findUnique({
+          where: { email: user.email! },
+          select: { id: true },
+        });
+        if (!existing) {
+          // Check if this user was approved by admin
+          const approved = await prisma.registrationRequest.findFirst({
+            where: { email: user.email!, status: "approved" },
+          });
+          if (approved) {
+            // Allow sign-in — NextAuth will create the user
+            return true;
+          }
+
+          // Save registration request for admin review
+          const ghProfile = profile as { login?: string } | undefined;
+          await prisma.registrationRequest.upsert({
+            where: { email_status: { email: user.email!, status: "pending" } },
+            update: {
+              name: user.name,
+              image: user.image,
+              githubUsername: ghProfile?.login,
+            },
+            create: {
+              email: user.email!,
+              name: user.name,
+              image: user.image,
+              githubUsername: ghProfile?.login,
+            },
+          });
+          return "/login?error=RegistrationClosed";
+        }
+      }
+      return true;
+    },
     async session({ session, user }) {
       if (session.user) {
         session.user.id = user.id;

@@ -57,16 +57,37 @@ export default function SectionsAdmin() {
     return data[TOGGLE_FIELDS[key]] ?? true;
   };
 
-  const handleDragStart = (idx: number) => { dragItem.current = idx; };
-  const handleDragEnter = (idx: number) => { dragOverItem.current = idx; };
-  const handleDragEnd = () => {
+  const handleDragStart = (e: React.DragEvent, idx: number) => {
+    dragItem.current = idx;
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    dragOverItem.current = idx;
+  };
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
     if (dragItem.current === null || dragOverItem.current === null) return;
+    if (dragItem.current === dragOverItem.current) return;
     const updated = [...order];
     const [dragged] = updated.splice(dragItem.current, 1);
     updated.splice(dragOverItem.current, 0, dragged);
     setOrder(updated);
     dragItem.current = null;
     dragOverItem.current = null;
+  };
+  const handleDragEnd = () => {
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
+
+  const moveItem = (idx: number, direction: -1 | 1) => {
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= order.length) return;
+    const updated = [...order];
+    [updated[idx], updated[newIdx]] = [updated[newIdx], updated[idx]];
+    setOrder(updated);
   };
 
   const save = async () => {
@@ -108,28 +129,41 @@ export default function SectionsAdmin() {
 
           return (
             <div key={key} draggable={!isHero}
-              onDragStart={() => handleDragStart(idx)}
-              onDragEnter={() => handleDragEnter(idx)}
+              onDragStart={(e) => handleDragStart(e, idx)}
+              onDragOver={(e) => handleDragOver(e, idx)}
+              onDrop={handleDrop}
               onDragEnd={handleDragEnd}
-              onDragOver={(e) => e.preventDefault()}
               className={`flex items-center gap-3 p-3 bg-[#121826] border border-gray-800 rounded-xl transition-opacity ${
                 !visible && !isHero ? "opacity-40" : ""
               } ${!isHero ? "cursor-grab active:cursor-grabbing" : ""}`}>
 
               {!isHero ? (
+                <div className="flex flex-col gap-0.5 flex-shrink-0">
+                  <button onClick={() => moveItem(idx, -1)} disabled={idx === 0}
+                    className="text-gray-500 hover:text-white disabled:opacity-20 transition-colors p-0.5 cursor-pointer">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M5 15l7-7 7 7" /></svg>
+                  </button>
+                  <button onClick={() => moveItem(idx, 1)} disabled={idx === order.length - 1}
+                    className="text-gray-500 hover:text-white disabled:opacity-20 transition-colors p-0.5 cursor-pointer">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M19 9l-7 7-7-7" /></svg>
+                  </button>
+                </div>
+              ) : <div className="w-5" />}
+
+              {!isHero && (
                 <svg className="w-5 h-5 text-gray-600 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                   <circle cx="9" cy="6" r="1.5" /><circle cx="15" cy="6" r="1.5" />
                   <circle cx="9" cy="12" r="1.5" /><circle cx="15" cy="12" r="1.5" />
                   <circle cx="9" cy="18" r="1.5" /><circle cx="15" cy="18" r="1.5" />
                 </svg>
-              ) : <div className="w-5" />}
+              )}
 
               <span className="flex-1 text-sm font-medium text-gray-200">{label}</span>
               <span className="text-xs text-gray-600 font-mono">{key}</span>
 
               {!isHero ? (
                 <button onClick={() => toggle(key)}
-                  className={`relative w-10 h-6 rounded-full transition-colors ${visible ? "bg-[#5eead4]" : "bg-gray-700"}`}>
+                  className={`relative w-10 h-6 rounded-full transition-colors cursor-pointer ${visible ? "bg-[#5eead4]" : "bg-gray-700"}`}>
                   <span className={`absolute top-1 w-4 h-4 rounded-full transition-transform ${visible ? "bg-[#0b0f19] left-5" : "bg-gray-400 left-1"}`} />
                 </button>
               ) : (
